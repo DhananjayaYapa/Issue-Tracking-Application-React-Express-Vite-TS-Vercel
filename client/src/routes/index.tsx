@@ -3,8 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { APP_ROUTES, USER_ROLES } from '../utilities/constants'
 import PrivateRoute from './PrivateRoute'
 import { AppLayout } from '../templates'
-
-// Page imports
 import AuthPage from '../pages/AuthPage/AuthPage'
 import Dashboard from '../pages/Dashboard/Dashboard'
 import Issues from '../pages/Issues/Issues'
