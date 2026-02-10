@@ -13,7 +13,6 @@ export const exceptionHandler = async (error: any): Promise<string> => {
                     break
                 case 401:
                     errorMsg = error.data?.message || 'Unauthorized - Please login again'
-                    // Clear token on 401
                     localStorage.removeItem('token')
                     break
                 case 403:
