@@ -27,3 +27,6 @@ build/
 
 # Coverage
 coverage/
+
+uploads/*
+!uploads/.gitkeep
