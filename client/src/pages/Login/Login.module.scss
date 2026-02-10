@@ -1,0 +1,28 @@
+.loginContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(#29273f, #b61a0b);
+  padding: 20px;
+}
+
+.loginCard {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px !important;
+  background-color: rgba(20, 18, 50, 0.92) !important;
+  backdrop-filter: blur(12px);
+}
+
+.cardContent {
+  padding: 40px !important;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 32px;
+}
