@@ -1,30 +1,19 @@
-/**
- * Models Index - Sequelize
- * ==========================
- * Central model registry with associations
- */
-
 const { sequelize } = require("../index");
 const User = require("./User");
 const Issue = require("./Issue");
-
-// =============================================
-// Define Associations
-// =============================================
-
-// User has many Issues (as creator)
+// User has many Issues
 User.hasMany(Issue, {
   foreignKey: "createdBy",
   as: "createdIssues",
 });
 
-// User has many Issues (as assignee)
+// User has many Issues
 User.hasMany(Issue, {
   foreignKey: "assignedTo",
   as: "assignedIssues",
 });
 
-// Issue belongs to User (creator)
+// Issue belongs to User
 Issue.belongsTo(User, {
   foreignKey: "createdBy",
   as: "creator",
@@ -47,9 +36,7 @@ Issue.belongsTo(require("./IssuePriority"), {
   as: "priority",
 });
 
-// =============================================
-// Export all models
-// =============================================
+//Export all models and sequelize instance
 module.exports = {
   sequelize,
   User,

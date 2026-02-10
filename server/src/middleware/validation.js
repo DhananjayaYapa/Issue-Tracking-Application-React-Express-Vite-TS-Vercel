@@ -1,25 +1,6 @@
-/**
- * Validation Middleware
- * =====================
- * Request validation using express-validator
- * Provides reusable validation rules and middleware
- */
-
 const { validationResult, body, param, query } = require("express-validator");
 const { badRequestResponse } = require("../shared/utils/responseHelper");
 
-/**
- * Validate Request Middleware
- * Checks for validation errors and returns 400 if any exist
- * Must be placed AFTER validation rules in the middleware chain
- *
- * Usage:
- * router.post('/create',
- *   [body('email').isEmail()],
- *   validateRequest,
- *   controller.create
- * )
- */
 const validateRequest = (req, res, next) => {
   const errors = validationResult(req);
 
@@ -36,10 +17,7 @@ const validateRequest = (req, res, next) => {
   next();
 };
 
-// ========================================
-// Auth Validation Rules
-// ========================================
-
+//Auth Validation Rules
 const registerValidation = [
   body("name")
     .trim()
@@ -77,10 +55,7 @@ const loginValidation = [
   body("password").notEmpty().withMessage("Password is required"),
 ];
 
-// ========================================
 // Issue Validation Rules
-// ========================================
-
 const createIssueValidation = [
   body("title")
     .trim()
@@ -146,10 +121,7 @@ const issueIdValidation = [
   param("id").isInt({ min: 1 }).withMessage("Invalid issue ID"),
 ];
 
-// ========================================
 // Query Validation Rules (for list/search)
-// ========================================
-
 const listIssuesValidation = [
   query("status")
     .optional()

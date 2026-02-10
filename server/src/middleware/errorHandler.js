@@ -1,39 +1,21 @@
-/**
- * Error Handler Middleware
- * ========================
- * Centralized error handling for the application
- * Catches all errors and returns consistent error responses
- * 
- * Adapted from: olympus-backend-services/express-server/middleware/auth.js
- */
-
 const { errorResponse } = require('../shared/utils/responseHelper');
-
-/**
- * Custom API Error class
- * Allows throwing errors with specific status codes
- */
 class ApiError extends Error {
     constructor(message, statusCode = 500) {
         super(message);
         this.statusCode = statusCode;
-        this.isOperational = true; // Distinguishes operational errors from programming errors
+        this.isOperational = true;
         Error.captureStackTrace(this, this.constructor);
     }
 }
 
-/**
- * Not Found Error (404)
- */
+//not found error
 class NotFoundError extends ApiError {
     constructor(message = 'Resource not found') {
         super(message, 404);
     }
 }
 
-/**
- * Validation Error (400)
- */
+//validation error
 class ValidationError extends ApiError {
     constructor(message = 'Validation failed', errors = null) {
         super(message, 400);
@@ -41,28 +23,21 @@ class ValidationError extends ApiError {
     }
 }
 
-/**
- * Unauthorized Error (401)
- */
+//unauthorized error
 class UnauthorizedError extends ApiError {
     constructor(message = 'Unauthorized access') {
         super(message, 401);
     }
 }
 
-/**
- * Forbidden Error (403)
- */
+//forbidden error
 class ForbiddenError extends ApiError {
     constructor(message = 'Access forbidden') {
         super(message, 403);
     }
 }
 
-/**
- * Error Handler Middleware
- * Must be the LAST middleware in the chain
- */
+//Error Handler Middleware
 const errorHandler = (err, req, res, next) => {
     // Log the error
     console.error('='.repeat(50));
@@ -107,13 +82,6 @@ const notFoundHandler = (req, res, next) => {
     return errorResponse(res, `Route not found: ${req.method} ${req.originalUrl}`, 404);
 };
 
-/**
- * Async Handler Wrapper
- * Wraps async route handlers to catch errors automatically
- * Eliminates the need for try-catch in every controller
- * 
- * Usage: router.get('/path', asyncHandler(controller.method))
- */
 const asyncHandler = (fn) => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
 };

@@ -1,21 +1,6 @@
-/**
- * Authentication Middleware
- * =========================
- * JWT authentication and authorization middleware
- *
- * Adapted from: olympus-backend-services/express-server/middleware/auth.js
- * Key difference: Using real JWT verification instead of mock auth
- */
-
 const jwt = require("jsonwebtoken");
 const { UnauthorizedError, ForbiddenError } = require("./errorHandler");
 
-/**
- * Authenticate User Middleware
- * Verifies JWT token and attaches user to request
- *
- * Usage: router.get('/protected', authenticate, controller.method)
- */
 const authenticate = (req, res, next) => {
   try {
     // Get token from Authorization header
@@ -25,7 +10,7 @@ const authenticate = (req, res, next) => {
       throw new UnauthorizedError("No authorization token provided");
     }
 
-    // Expected format: "Bearer <token>"
+    // Expected format
     const parts = authHeader.split(" ");
 
     if (parts.length !== 2 || parts[0] !== "Bearer") {
@@ -39,7 +24,6 @@ const authenticate = (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Attach user info to request object
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
@@ -59,11 +43,7 @@ const authenticate = (req, res, next) => {
   }
 };
 
-/**
- * Optional Authentication Middleware
- * Verifies JWT if present, but doesn't require it
- * Useful for routes that work differently for authenticated vs anonymous users
- */
+//Optional Authentication Middleware
 const optionalAuth = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -92,7 +72,7 @@ const optionalAuth = (req, res, next) => {
 
     next();
   } catch (error) {
-    // If token is invalid, treat as anonymous user
+    // If token is invalid
     req.user = null;
     next();
   }

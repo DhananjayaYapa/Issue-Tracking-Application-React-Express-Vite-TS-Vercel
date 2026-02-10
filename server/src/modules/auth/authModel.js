@@ -1,9 +1,3 @@
-/**
- * Auth Model - User Database Operations (Sequelize)
- * ===================================================
- * Handles all user-related database queries using Sequelize ORM
- */
-
 const { User } = require("../../config/db/models");
 const { Op } = require("sequelize");
 
@@ -126,7 +120,7 @@ class AuthModel {
       { passwordHash },
       {
         where: { userId, isEnabled: true },
-        individualHooks: false, // Don't re-hash the password
+        individualHooks: false,
       },
     );
     return { user_id: userId };

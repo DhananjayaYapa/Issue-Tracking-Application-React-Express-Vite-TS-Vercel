@@ -1,10 +1,3 @@
-/**
- * Issue Constants
- * ===============
- * Centralized constants for issue-related values
- * Similar to Olympus layers/com.olympus.common.constants
- */
-
 // Issue Status Values
 const ISSUE_STATUS = {
   OPEN: "Open",

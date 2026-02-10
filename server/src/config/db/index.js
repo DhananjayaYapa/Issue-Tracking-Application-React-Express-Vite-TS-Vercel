@@ -1,9 +1,3 @@
-/**
- * Sequelize Database Configuration
- * =================================
- * Sequelize ORM setup with MySQL
- */
-
 const { Sequelize } = require("sequelize");
 
 // Create Sequelize instance
@@ -24,14 +18,12 @@ const sequelize = new Sequelize(
     },
     define: {
       timestamps: true,
-      underscored: true, // Use snake_case for column names
+      underscored: true,
     },
   },
 );
 
-/**
- * Test database connection
- */
+//Test database connection
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
@@ -43,11 +35,6 @@ const testConnection = async () => {
   }
 };
 
-/**
- * Sync all models with database
- * Use { alter: true } in development to update tables
- * Use { force: true } only to drop and recreate (DANGER!)
- */
 const syncDatabase = async (options = {}) => {
   try {
     await sequelize.sync(options);

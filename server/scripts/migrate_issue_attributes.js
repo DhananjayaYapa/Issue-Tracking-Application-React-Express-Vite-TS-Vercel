@@ -7,12 +7,12 @@ const migrate = async () => {
   try {
     console.log("Starting migration...");
 
-    // 1. Sync new models to create tables
+    // Sync new models to create tables
     console.log("Creating new tables...");
     await IssueStatus.sync();
     await IssuePriority.sync();
 
-    // 2. Seed data
+    //Seed data
     console.log("Seeding data...");
     const statuses = ["Open", "In Progress", "Resolved", "Closed"];
     const priorities = ["Low", "Medium", "High", "Critical"];
@@ -24,14 +24,14 @@ const migrate = async () => {
       await IssuePriority.findOrCreate({ where: { name } });
     }
 
-    // 3. Add new columns to issues table
+    // Add new columns to issues table
     console.log("Adding new columns to issues table...");
     const queryInterface = sequelize.getQueryInterface();
 
     try {
       await queryInterface.addColumn("issues", "status_id", {
         type: "INTEGER",
-        allowNull: true, // Temporarily true for migration
+        allowNull: true,
       });
     } catch (e) {
       console.log("Column status_id might already exist");
@@ -46,15 +46,14 @@ const migrate = async () => {
       console.log("Column priority_id might already exist");
     }
 
-    // 4. Migrate data
+    // Migrate data
     console.log("Migrating existing data...");
-    // We use raw queries for speed and because the old columns might not be in the model definition anymore
     const [issues] = await sequelize.query(
       "SELECT issue_id, status, priority FROM issues",
     );
 
     for (const issue of issues) {
-      // Get IDs (caching would be better but this is one-off)
+      // Get IDs
       const status = await IssueStatus.findOne({
         where: { name: issue.status || "Open" },
       });
@@ -70,7 +69,7 @@ const migrate = async () => {
       );
     }
 
-    // 5. Add Constraints and Drop old columns
+    //Add Constraints and Drop old columns
     console.log("Applying constraints and cleaning up...");
 
     // Add FK constraints
@@ -91,8 +90,7 @@ const migrate = async () => {
       console.log("Constraints might already exist", e.message);
     }
 
-    // Drop old columns - careful, this is destructive
-    // Check if columns exist before dropping to allow re-running
+    // Drop old columns
     try {
       await queryInterface.removeColumn("issues", "status");
     } catch (e) {}

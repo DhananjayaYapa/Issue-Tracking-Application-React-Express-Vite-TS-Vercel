@@ -45,7 +45,7 @@ const verify = async () => {
   try {
     console.log("Starting API Verification...");
 
-    // 1. Register User
+    // Register User
     const user = {
       name: "Test Refactor",
       email: `testrefactor${Date.now()}@example.com`,
@@ -73,7 +73,7 @@ const verify = async () => {
     const token = loginRes.data.data.token;
     console.log("Logged in. Token received.");
 
-    // 2. Create Issue
+    // Create Issue
     console.log("Creating issue...");
     const issueData = {
       title: "Test Database Normalization",
@@ -88,9 +88,9 @@ const verify = async () => {
       process.exit(1);
     }
     console.log("Issue created:", createRes.data);
-    const issueId = createRes.data.data.insertId || createRes.data.data.id; // Controller returns id in data.id? No, model returns insertId.
+    const issueId = createRes.data.data.insertId || createRes.data.data.id;
 
-    // 3. Get Issue
+    // Get Issue
     console.log(`Fetching issue ${issueId}...`);
     const getRes = await request("GET", `/issues/${issueId}`, null, token);
 
@@ -115,7 +115,7 @@ const verify = async () => {
       console.log("PASSED: Issue fields are correct strings.");
     }
 
-    // 4. Update Status
+    //Update Status
     console.log("Updating status to In Progress...");
     const updateRes = await request(
       "PUT",
@@ -140,13 +140,9 @@ const verify = async () => {
     }
     console.log("PASSED: Status updated successfully.");
 
-    // 5. Get Stats
+    //Get Stats
     console.log("Fetching stats...");
-    const statsRes = await request("GET", "/issues/stats/counts", null, token); // URL might be different
-    // Check router: /issues/stats/counts ?
-    // Server.js says: statusCounts: 'GET /api/issues/stats/counts'
-    // But routes/issueRoutes.js might define it differently.
-    // Let's assume server.js is correct or check routes.
+    const statsRes = await request("GET", "/issues/stats/counts", null, token);
 
     console.log("Stats:", statsRes.data);
 
