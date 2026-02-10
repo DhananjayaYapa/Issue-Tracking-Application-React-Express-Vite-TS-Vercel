@@ -118,7 +118,6 @@ export const validateFormData = async (data: { [key: string]: any }): Promise<[a
               }
             }
             const invalidFileMessage = invalidFileList?.length > 0 ? ':Invalid file type`' : ''
-            // error = `${invalidFileList} :Invalid file type`
             error = invalidFileList + invalidFileMessage
           }
         }

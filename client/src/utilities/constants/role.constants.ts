@@ -1,23 +1,10 @@
-/**
- * Role Constants
- * ==============
- * Centralized role and permission constants
- *
- * Pattern adapted from: Athena-web/src/utilities/constants/app.constants.ts
- * Uses the same feature-key pattern (APP_FEATURE_KEYS)
- */
-
 // User Roles
 export const USER_ROLES = {
   ADMIN: 'admin' as const,
   USER: 'user' as const,
 }
 
-/**
- * Feature Keys
- * Same pattern as Athena APP_FEATURE_KEYS (FE0XX)
- * Each key maps to a specific permission/action
- */
+// Application Feature Keys
 export const APP_FEATURE_KEYS = {
   // Issue actions
   CREATE_ISSUE: 'IT_FE001',
@@ -36,11 +23,7 @@ export const APP_FEATURE_KEYS = {
   EXPORT_ISSUES: 'IT_FE021',
 } as const
 
-/**
- * Role-Feature Mapping
- * Defines which features each role has access to
- * Same pattern as Olympus DB: feature_role_rel table
- */
+// Role to Feature Mapping
 export const ROLE_FEATURES: Record<string, string[]> = {
   [USER_ROLES.ADMIN]: [
     APP_FEATURE_KEYS.VIEW_ALL_ISSUES,
@@ -58,19 +41,12 @@ export const ROLE_FEATURES: Record<string, string[]> = {
   ],
 }
 
-/**
- * Check if a role has a specific feature permission
- * Same pattern as: Olympus checkUserRoleFeaturePermission()
- */
 export const hasFeaturePermission = (role: string, featureKey: string): boolean => {
   const features = ROLE_FEATURES[role]
   if (!features) return false
   return features.includes(featureKey)
 }
 
-/**
- * Get all feature keys for a role
- */
 export const getRoleFeatures = (role: string): string[] => {
   return ROLE_FEATURES[role] || []
 }
