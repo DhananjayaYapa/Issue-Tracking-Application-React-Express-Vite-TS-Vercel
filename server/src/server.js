@@ -40,10 +40,10 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-// Mount all API routes under /api
+// Mount all API routes
 app.use("/api", routes);
 
-// Root endpoint - API info
+// Root endpoint
 app.get("/", (req, res) => {
   res.json({
     name: "Issue Tracker API",

@@ -1,9 +1,3 @@
-/**
- * User Model - Sequelize
- * =======================
- * Defines the User entity with validations and hooks
- */
-
 const { DataTypes } = require("sequelize");
 const bcrypt = require("bcryptjs");
 const { sequelize } = require("../index");
@@ -79,16 +73,12 @@ const User = sequelize.define(
   },
 );
 
-/**
- * Instance method to verify password
- */
+// verify password
 User.prototype.verifyPassword = async function (password) {
   return await bcrypt.compare(password, this.passwordHash);
 };
 
-/**
- * Class method to hash password
- */
+//hash password
 User.hashPassword = async function (password) {
   return await bcrypt.hash(password, 10);
 };

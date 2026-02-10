@@ -1,22 +1,10 @@
-/**
- * Export Helper Utilities
- * =======================
- * Functions to export data to CSV and JSON formats
- */
-
 const { Parser } = require("json2csv");
 
-/**
- * Convert issues array to CSV format
- * @param {Array} issues - Array of issue objects
- * @returns {string} - CSV formatted string
- */
 const exportToCSV = (issues) => {
   if (!issues || issues.length === 0) {
     return "No data to export";
   }
 
-  // Define CSV fields
   const fields = [
     { label: "Issue ID", value: "issue_id" },
     { label: "Title", value: "title" },
@@ -36,11 +24,6 @@ const exportToCSV = (issues) => {
   return csv;
 };
 
-/**
- * Format issues array for JSON export
- * @param {Array} issues - Array of issue objects
- * @returns {Object} - Formatted JSON object
- */
 const exportToJSON = (issues) => {
   return {
     exportDate: new Date().toISOString(),
@@ -60,10 +43,6 @@ const exportToJSON = (issues) => {
   };
 };
 
-/**
- * Get current date string for filename
- * @returns {string} - Date string in YYYY-MM-DD format
- */
 const getExportFilename = (format) => {
   const date = new Date().toISOString().split("T")[0];
   return `issues-export-${date}.${format}`;

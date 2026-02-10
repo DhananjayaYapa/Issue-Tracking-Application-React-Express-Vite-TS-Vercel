@@ -1,15 +1,3 @@
-/**
- * Seed Admin User Script
- * ========================
- * Creates a default admin user in the database
- *
- * Usage: node scripts/seed-admin.js
- *
- * Admin credentials (change password after first login):
- *   Email:    admin@issuetracker.com
- *   Password: Admin@123
- */
-
 require("dotenv").config();
 
 const bcrypt = require("bcryptjs");
@@ -36,11 +24,11 @@ const seedAdmin = async () => {
       process.exit(1);
     }
 
-    // Sync database (alter mode to add role column if needed)
+    // Sync database
     await syncDatabase({ alter: true });
     console.log("Database synced successfully.");
 
-    // Check if admin already exists
+    // Check admin already exists
     const existingAdmin = await User.findOne({
       where: { email: ADMIN_USER.email },
     });
@@ -70,7 +58,7 @@ const seedAdmin = async () => {
     console.log(`  Role:     ${admin.role}`);
     console.log(`  Password: ${ADMIN_USER.password}`);
     console.log("-".repeat(40));
-    console.log("\n⚠️  Change the password after first login!");
+    console.log("\nChange the password after first login!");
 
     process.exit(0);
   } catch (error) {

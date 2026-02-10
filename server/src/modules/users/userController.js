@@ -1,11 +1,3 @@
-/**
- * User Controller - Admin User Management
- * ==========================================
- * Handles admin-only user management operations
- *
- * Pattern: Same as authController.js (class with static methods)
- */
-
 const AuthModel = require("../auth/authModel");
 const {
   successResponse,
@@ -15,10 +7,7 @@ const {
 } = require("../../shared/utils/responseHelper");
 
 class UserController {
-  /**
-   * GET /api/users
-   * Get all users (admin only)
-   */
+  //get all users  - admin only
   static async getAllUsers(req, res, next) {
     try {
       const users = await AuthModel.getAllUsers();
@@ -42,10 +31,7 @@ class UserController {
     }
   }
 
-  /**
-   * GET /api/users/:id
-   * Get user by ID (admin only)
-   */
+  //get user by id - admin only
   static async getUserById(req, res, next) {
     try {
       const { id } = req.params;
@@ -73,33 +59,25 @@ class UserController {
     }
   }
 
-  /**
-   * DELETE /api/users/:id
-   * Soft-delete (disable) user (admin only)
-   * Admin cannot delete themselves
-   */
+  //delete user - admin only
   static async deleteUser(req, res, next) {
     try {
       const { id } = req.params;
       const adminUserId = req.user.userId;
 
-      // Prevent admin from deleting themselves
       if (parseInt(id) === adminUserId) {
         return badRequestResponse(res, "Cannot delete your own admin account");
       }
 
-      // Check if user exists
       const user = await AuthModel.findById(parseInt(id));
       if (!user) {
         return notFoundResponse(res, "User not found");
       }
 
-      // Prevent deleting other admins
       if (user.role === "admin") {
         return forbiddenResponse(res, "Cannot delete another admin account");
       }
 
-      // Soft delete (disable) the user
       await AuthModel.deleteUser(parseInt(id));
 
       return successResponse(res, null, "User deleted successfully");

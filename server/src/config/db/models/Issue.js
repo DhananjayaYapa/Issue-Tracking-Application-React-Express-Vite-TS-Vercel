@@ -1,13 +1,6 @@
-/**
- * Issue Model - Sequelize
- * ========================
- * Defines the Issue entity with ENUM types and associations
- */
-
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../index");
 
-// ENUM values matching PostgreSQL schema
 const ISSUE_STATUS = ["Open", "In Progress", "Resolved", "Closed"];
 const ISSUE_PRIORITY = ["Low", "Medium", "High", "Critical"];
 
@@ -43,7 +36,7 @@ const Issue = sequelize.define(
         model: "issue_statuses",
         key: "status_id",
       },
-      defaultValue: 1, // Assuming 1 is 'Open'
+      defaultValue: 1, //1 is 'Open'
     },
     priorityId: {
       type: DataTypes.INTEGER,
@@ -53,7 +46,7 @@ const Issue = sequelize.define(
         model: "issue_priorities",
         key: "priority_id",
       },
-      defaultValue: 2, // Assuming 2 is 'Medium'
+      defaultValue: 2, //2 is 'Medium'
     },
     createdBy: {
       type: DataTypes.INTEGER,

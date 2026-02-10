@@ -1,11 +1,3 @@
-/**
- * Auth Routes
- * ===========
- * Handles user authentication endpoints
- * 
- * Adapted from: olympus-backend-services/express-server/routes/attendanceRoutes.js
- */
-
 const express = require('express');
 const router = express.Router();
 const AuthController = require('./authController');
@@ -17,10 +9,7 @@ const {
 } = require('../../middleware/validation');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-// ========================================
-// Public Routes (no authentication required)
-// ========================================
-
+//public routes
 /**
  * @route   POST /api/auth/register
  * @desc    Register a new user
@@ -47,10 +36,7 @@ router.post(
     asyncHandler(AuthController.login)
 );
 
-// ========================================
-// Protected Routes (authentication required)
-// ========================================
-
+//protected routes
 /**
  * @route   GET /api/auth/profile
  * @desc    Get authenticated user's profile

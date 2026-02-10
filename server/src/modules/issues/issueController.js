@@ -1,11 +1,3 @@
-/**
- * Issue Controller - Issue Business Logic
- * ========================================
- * Handles all issue-related request processing
- *
- * Adapted from: olympus-backend-services/express-server/controllers/attendanceController.js
- */
-
 const IssueModel = require("./issueModel");
 const { USER_ROLES } = require("../../shared/constants/roleConstants");
 const {
@@ -24,10 +16,7 @@ const {
 const { NotFoundError } = require("../../middleware/errorHandler");
 
 class IssueController {
-  /**
-   * GET /api/issues
-   * Get all issues with filters (pagination handled in frontend)
-   */
+  //get all issues with optional filters and sorting
   static async getAllIssues(req, res, next) {
     try {
       const {
@@ -50,7 +39,6 @@ class IssueController {
         sortOrder,
       });
 
-      // Format issues for response
       const formattedIssues = issues.map((issue) => formatIssueResponse(issue));
 
       return successResponse(
@@ -63,10 +51,7 @@ class IssueController {
     }
   }
 
-  /**
-   * GET /api/issues/stats/counts
-   * Get issue counts grouped by status
-   */
+  //get issue counts grouped by status
   static async getStatusCounts(req, res, next) {
     try {
       const counts = await IssueModel.getStatusCounts();
@@ -81,10 +66,7 @@ class IssueController {
     }
   }
 
-  /**
-   * GET /api/issues/my-stats/counts
-   * Get issue counts grouped by status for the authenticated user
-   */
+  //get issue counts grouped by status for the authenticated user
   static async getMyStatusCounts(req, res, next) {
     try {
       const counts = await IssueModel.getMyStatusCounts(req.user.userId);
@@ -99,15 +81,11 @@ class IssueController {
     }
   }
 
-  /**
-   * GET /api/issues/export/csv
-   * Export issues to CSV
-   */
+  // Export issues to CSV
   static async exportCSV(req, res, next) {
     try {
       const { status, priority, fromDate, toDate, createdBy } = req.query;
 
-      // If user role, force createdBy to own userId
       const effectiveCreatedBy =
         req.user.role === USER_ROLES.USER ? req.user.userId : createdBy;
 
@@ -134,15 +112,10 @@ class IssueController {
     }
   }
 
-  /**
-   * GET /api/issues/export/json
-   * Export issues to JSON
-   */
+  // Export issues to JSON
   static async exportJSON(req, res, next) {
     try {
       const { status, priority, fromDate, toDate, createdBy } = req.query;
-
-      // If user role, force createdBy to own userId
       const effectiveCreatedBy =
         req.user.role === USER_ROLES.USER ? req.user.userId : createdBy;
 
@@ -169,11 +142,7 @@ class IssueController {
     }
   }
 
-  /**
-   * GET /api/issues/:id
-   * Get single issue by ID
-   * Users can only view their own issues; admin can view any
-   */
+  //get issue by ID
   static async getIssueById(req, res, next) {
     try {
       const { id } = req.params;
@@ -184,7 +153,6 @@ class IssueController {
         return notFoundResponse(res, "Issue not found");
       }
 
-      // Users can only view their own issues
       if (
         req.user.role === USER_ROLES.USER &&
         issue.created_by !== req.user.userId
@@ -202,10 +170,7 @@ class IssueController {
     }
   }
 
-  /**
-   * POST /api/issues
-   * Create new issue
-   */
+  // Create new issue
   static async createIssue(req, res, next) {
     try {
       const { title, description, status, priority, assignedTo } = req.body;
@@ -253,12 +218,7 @@ class IssueController {
     }
   }
 
-  /**
-   * PUT /api/issues/:id
-   * Update issue
-   * Users can only update their own issues and cannot change status
-   * Admin can update any issue
-   */
+  // Update issue
   static async updateIssue(req, res, next) {
     try {
       const { id } = req.params;
@@ -283,7 +243,7 @@ class IssueController {
         return forbiddenResponse(res, "Only admin can change issue status");
       }
 
-      // Validation — check required fields if provided (partial update)
+      // Validation
       const errors = [];
       if (title !== undefined && !title.trim())
         errors.push("Title is required");
@@ -305,8 +265,6 @@ class IssueController {
 
       // Handle attachment
       const attachment = req.file ? `/uploads/${req.file.filename}` : undefined;
-
-      // Update the issue
       await IssueModel.updateIssue(id, {
         title,
         description,
@@ -316,7 +274,6 @@ class IssueController {
         attachment,
       });
 
-      // Get updated issue
       const updatedIssue = await IssueModel.getIssueById(id);
 
       return successResponse(
@@ -329,25 +286,19 @@ class IssueController {
     }
   }
 
-  /**
-   * PATCH /api/issues/:id/status
-   * Update issue status only
-   */
+  // Update issue status (admin only)
   static async updateStatus(req, res, next) {
     try {
       const { id } = req.params;
       const { status } = req.body;
 
-      // Check if issue exists
       const existingIssue = await IssueModel.getIssueById(id);
       if (!existingIssue) {
         return notFoundResponse(res, "Issue not found");
       }
 
-      // Update status
       await IssueModel.updateStatus(id, status);
 
-      // Get updated issue
       const updatedIssue = await IssueModel.getIssueById(id);
 
       return successResponse(
@@ -360,21 +311,16 @@ class IssueController {
     }
   }
 
-  /**
-   * DELETE /api/issues/:id
-   * Delete issue
-   */
+  // Delete issue
   static async deleteIssue(req, res, next) {
     try {
       const { id } = req.params;
 
-      // Check if issue exists
       const existingIssue = await IssueModel.getIssueById(id);
       if (!existingIssue) {
         return notFoundResponse(res, "Issue not found");
       }
 
-      // Delete the issue
       await IssueModel.deleteIssue(id);
 
       return successResponse(res, null, "Issue deleted successfully");
@@ -383,10 +329,7 @@ class IssueController {
     }
   }
 
-  /**
-   * GET /api/issues/my-issues
-   * Get issues created by the authenticated user
-   */
+  // Get issues filters
   static async getMyIssues(req, res, next) {
     try {
       const userId = req.user.userId;
@@ -411,10 +354,7 @@ class IssueController {
       next(error);
     }
   }
-  /**
-   * GET /api/issues/metadata
-   * Get issue metadata (statuses, priorities, severities)
-   */
+  // Get metadata
   static async getMetadata(req, res, next) {
     try {
       const metadata = await IssueModel.getMetadata();
@@ -425,10 +365,7 @@ class IssueController {
   }
 }
 
-/**
- * Helper function to format issue response
- * Transforms database row to API response format
- */
+// Helper function to format issue response
 function formatIssueResponse(issue) {
   return {
     id: issue.issue_id,

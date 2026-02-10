@@ -1,32 +1,25 @@
-/**
- * Database Configuration - PostgreSQL
- * ====================================
- * PostgreSQL connection pool using pg driver
- */
+const mysql = require('mysql2/promise');
 
-const { Pool } = require('pg');
-
-// Create connection pool (reusable connections)
-const pool = new Pool({
+// Create connection pool
+const pool = mysql.createPool({
     host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 5432,
+    port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
-    max: 10,                    // Maximum number of connections
-    idleTimeoutMillis: 30000,   // Close idle connections after 30 seconds
-    connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection cannot be established
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    idleTimeout: 30000,
+    connectTimeout: 2000,
 });
 
-/**
- * Test database connection
- * Called on server startup to verify DB is accessible
- */
+//Test database connection
 const testConnection = async () => {
     try {
-        const client = await pool.connect();
+        const connection = await pool.getConnection();
         console.log('Database connected successfully');
-        client.release();
+        connection.release();
         return true;
     } catch (error) {
         console.error('Database connection failed:', error.message);
@@ -36,21 +29,21 @@ const testConnection = async () => {
 
 /**
  * Execute a query with parameters
- * @param {string} sql - SQL query string (use $1, $2, etc. for parameters)
+ * @param {string} sql - SQL query string (use ? for parameters)
  * @param {Array} params - Query parameters
  * @returns {Promise<Array>} - Query results (rows)
  */
 const query = async (sql, params = []) => {
-    const result = await pool.query(sql, params);
-    return result.rows;
+    const [rows] = await pool.execute(sql, params);
+    return rows;
 };
 
 /**
  * Get a connection from the pool (for transactions)
- * @returns {Promise<Client>} - Database client
+ * @returns {Promise<Connection>} - Database connection
  */
 const getConnection = async () => {
-    return await pool.connect();
+    return await pool.getConnection();
 };
 
 module.exports = {

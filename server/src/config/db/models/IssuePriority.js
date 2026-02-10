@@ -1,9 +1,3 @@
-/**
- * IssuePriority Model
- * ===================
- * Lookup table for issue priorities
- */
-
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../index');
 

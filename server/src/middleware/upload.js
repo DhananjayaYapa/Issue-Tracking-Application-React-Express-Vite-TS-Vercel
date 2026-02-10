@@ -1,14 +1,7 @@
-/**
- * File Upload Middleware (Multer)
- * ================================
- * Handles file uploads for issue attachments
- */
-
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Ensure uploads directory exists
 const UPLOAD_DIR = path.join(__dirname, "../../uploads");
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -20,7 +13,6 @@ const storage = multer.diskStorage({
     cb(null, UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
-    // Generate unique filename: timestamp-randomhex-originalname
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const ext = path.extname(file.originalname);
     const baseName = path
@@ -30,7 +22,6 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter - allow common document and image types
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
     "image/jpeg",

@@ -1,21 +1,15 @@
-/**
- * Issue Model - Issue Database Operations (Sequelize)
- * =====================================================
- * Handles all issue-related database queries using Sequelize ORM
- */
-
 const { Issue, User, sequelize } = require("../../config/db/models");
 const { Op } = require("sequelize");
 const { ISSUE_STATUS } = require("../../shared/constants/issueConstants");
 
 class IssueModel {
   /**
-   * Get all issues with filters (no pagination - handled in frontend)
+   * Get all issues with filters
    * @param {Object} options - { status, priority, search, sortBy, sortOrder, createdBy }
    * @returns {Promise<Array>} - Array of issues
    */
   /**
-   * Get all issues with filters (no pagination - handled in frontend)
+   * Get all issues with filters
    * @param {Object} options - { status, priority, search, sortBy, sortOrder, createdBy }
    * @returns {Promise<Array>} - Array of issues
    */
@@ -33,7 +27,6 @@ class IssueModel {
     const IssueStatus = require("../../config/db/models/IssueStatus");
     const IssuePriority = require("../../config/db/models/IssuePriority");
 
-    // Build where clause
     const where = {};
     if (createdBy) where.createdBy = createdBy;
 
@@ -69,7 +62,7 @@ class IssueModel {
     } else if (safeSortBy === "priority") {
       order = [
         [{ model: IssuePriority, as: "priority" }, "priorityId", safeSortOrder],
-      ]; // Sort by ID usually better for priority
+      ];
     }
 
     const rows = await Issue.findAll({
@@ -90,7 +83,7 @@ class IssueModel {
           as: "status",
           attributes: ["name"],
           where: statusWhere,
-          required: !!status, // Inner join if filter exists
+          required: !!status,
         },
         {
           model: IssuePriority,
@@ -103,7 +96,7 @@ class IssueModel {
       order,
     });
 
-    // Format response to match existing API
+    // Format response
     return rows.map((issue) => ({
       issue_id: issue.issueId,
       title: issue.title,
@@ -189,7 +182,6 @@ class IssueModel {
       attachment = null,
     } = issueData;
 
-    // Resolve IDs
     const statusObj = await IssueStatus.findOne({ where: { name: status } });
     const priorityObj = await IssuePriority.findOne({
       where: { name: priority },
@@ -232,7 +224,6 @@ class IssueModel {
       const statusObj = await IssueStatus.findOne({ where: { name: status } });
       if (statusObj) {
         updateData.statusId = statusObj.statusId;
-        // Set resolved_at if status is Resolved or Closed
         if (status === "Resolved" || status === "Closed") {
           updateData.resolvedAt = new Date();
         }
@@ -298,11 +289,11 @@ class IssueModel {
 
   /**
    * Get issue counts by status
-   * @returns {Promise<Object>} - { Open: n, 'In Progress': n, Resolved: n, Closed: n, total: n }
+   * @returns {Promise<Object>}
    */
   /**
    * Get issue counts by status
-   * @returns {Promise<Object>} - { Open: n, 'In Progress': n, Resolved: n, Closed: n, total: n }
+   * @returns {Promise<Object>}
    */
   static async getStatusCounts() {
     const IssueStatus = require("../../config/db/models/IssueStatus");
@@ -331,7 +322,6 @@ class IssueModel {
     };
 
     results.forEach((row) => {
-      // Sequelizes returns nested keys in raw mode like 'status.name'
       const statusName = row["status.name"];
       if (counts.hasOwnProperty(statusName)) {
         counts[statusName] = parseInt(row.count);
@@ -345,7 +335,7 @@ class IssueModel {
   /**
    * Get issue counts by status for a specific user
    * @param {number} userId - User ID
-   * @returns {Promise<Object>} - { Open: n, 'In Progress': n, Resolved: n, Closed: n, total: n }
+   * @returns {Promise<Object>}
    */
   static async getMyStatusCounts(userId) {
     const IssueStatus = require("../../config/db/models/IssueStatus");
@@ -411,7 +401,7 @@ class IssueModel {
   }
 
   /**
-   * Get all issues for export (no pagination)
+   * Get all issues for export
    * @param {Object} options - { status, priority, search }
    * @returns {Promise<Array>} - All matching issues
    */

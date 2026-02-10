@@ -1,9 +1,3 @@
-/**
- * IssueStatus Mdel
- * =================
- * Lookup table for issue statuses
- */
-
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../index');
 

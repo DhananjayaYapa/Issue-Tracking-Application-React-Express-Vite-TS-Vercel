@@ -1,9 +1,3 @@
-/**
- * IssueSeverity Model
- * ===================
- * Lookup table for issue severities
- */
-
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../index');
 
