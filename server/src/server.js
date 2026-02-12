@@ -151,8 +151,10 @@
 
 // module.exports = app;
 
+///////////////////////////////////////////////////////////////////////////////////////////
 
-// Load environment variables
+
+// src/server.js
 require("dotenv").config();
 
 const express = require("express");
@@ -162,9 +164,7 @@ const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 const routes = require("./routes");
 const uploadRoute = require("./routes/upload"); // S3 upload route
 
-// Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Enable CORS
 app.use(
@@ -178,11 +178,9 @@ app.use(
 
 // Parse JSON request bodies
 app.use(express.json({ limit: "10mb" }));
-
-// Parse URL-encoded request bodies
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging middleware (only in development)
+// Request logging middleware (development only)
 if (process.env.NODE_ENV !== "production") {
   app.use((req, res, next) => {
     const timestamp = new Date().toISOString();
@@ -193,9 +191,7 @@ if (process.env.NODE_ENV !== "production") {
 
 // Mount API routes
 app.use("/api", routes);
-
-// Mount S3 upload route
-app.use("/api", uploadRoute); // /api/file
+app.use("/api", uploadRoute); // S3 upload: /api/file
 
 // Root endpoint
 app.get("/", (req, res) => {
@@ -232,74 +228,30 @@ app.get("/", (req, res) => {
   });
 });
 
-// 404 Not Found handler
+// 404 handler
 app.use(notFoundHandler);
 
 // Global error handler
 app.use(errorHandler);
 
-// Start server
-const startServer = async () => {
+// Test database connection and sync tables
+const initDatabase = async () => {
   try {
     const dbConnected = await testConnection();
 
     if (!dbConnected) {
       console.warn(
-        "Database connection failed. Server will start but database operations may fail."
+        "Database connection failed. Some operations may not work."
       );
     } else {
       await syncDatabase({ alter: true });
     }
-
-    app.listen(PORT, () => {
-      console.log("\n" + "=".repeat(50));
-      console.log("ISSUE TRACKER SERVER STARTED");
-      console.log("=".repeat(50));
-      console.log(`Server running on: http://localhost:${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
-      console.log(
-        `Database: ${process.env.DB_HOST}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME}`
-      );
-      console.log("=".repeat(50));
-      console.log("\nAvailable endpoints:");
-      console.log(`   GET  http://localhost:${PORT}/`);
-      console.log(`   GET  http://localhost:${PORT}/api/health`);
-      console.log(`   POST http://localhost:${PORT}/api/auth/register`);
-      console.log(`   POST http://localhost:${PORT}/api/auth/login`);
-      console.log(`   GET  http://localhost:${PORT}/api/issues`);
-      console.log(`   POST http://localhost:${PORT}/api/file`); // S3 upload
-      console.log("=".repeat(50) + "\n");
-    });
   } catch (error) {
-    console.error("Failed to start server:", error.message);
-    process.exit(1);
+    console.error("Database initialization error:", error.message);
   }
 };
 
-// Shutdown handling
-process.on("SIGTERM", () => {
-  console.log("\nSIGTERM signal received: closing HTTP server");
-  process.exit(0);
-});
-
-process.on("SIGINT", () => {
-  console.log("\nSIGINT signal received: closing HTTP server");
-  process.exit(0);
-});
-
-// Handle uncaught exceptions
-process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
-  process.exit(1);
-});
-
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
-  process.exit(1);
-});
-
-// Start server
-startServer();
+// Run DB init immediately
+initDatabase();
 
 module.exports = app;
