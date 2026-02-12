@@ -4,68 +4,163 @@ import {
   Box,
   Table,
   TableBody,
-  TableCell,
   TableContainer,
   TableHead,
-  TableRow,
   Paper,
   IconButton,
   Chip,
   Tooltip,
   Alert,
   Typography,
+  TextField,
+  InputAdornment,
+  TablePagination,
+  Grid,
 } from '@mui/material'
 import {
   Delete as DeleteIcon,
   AdminPanelSettings as AdminIcon,
   Person as UserIcon,
+  Search as SearchIcon,
+  Block as DisableIcon,
+  CheckCircle as EnableIcon,
 } from '@mui/icons-material'
 import type { RootState } from '../../redux/store'
-import { userActions } from '../../redux/actions'
+import { userActions, alertActions } from '../../redux/actions'
 import { AppLayoutHeader } from '../../templates'
 import { ConfirmationDialog, LoadingOverlay, PageHeader } from '../../components/shared'
 import { formatDate } from '../../utilities/helpers/commonFunctions'
+import { APP_TABLE_CONFIG } from '../../utilities/constants'
+import { paginationSx, StyledTableCell, StyledTableRow } from '../../assets/theme/theme'
 
 const Users: React.FC = () => {
   const dispatch = useDispatch()
   const { users, isLoading, error } = useSelector((state: RootState) => state.users)
   const currentUser = useSelector((state: RootState) => state.auth.user)
+  const deleteUserAlert = useSelector((state: RootState) => state.alert.deleteUserAlert)
+  const enableUserAlert = useSelector((state: RootState) => state.alert.enableUserAlert)
+  const permanentDeleteUserAlert = useSelector(
+    (state: RootState) => state.alert.permanentDeleteUserAlert
+  )
 
   const [deleteConfirm, setDeleteConfirm] = useState<{
     open: boolean
     userId: number | null
     userName: string
+    actionType: 'disable' | 'enable' | 'permanent'
   }>({
     open: false,
     userId: null,
     userName: '',
+    actionType: 'disable',
+  })
+  const [searchInput, setSearchInput] = useState('')
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [page, setPage] = useState(0)
+
+  // Filter users based on search input
+  const filteredUsers = users.filter((user) => {
+    if (!searchInput.trim()) return true
+    const searchTerm = searchInput.trim().toLowerCase()
+    return (
+      user.name.toLowerCase().includes(searchTerm) ||
+      user.email.toLowerCase().includes(searchTerm) ||
+      user.role.toLowerCase().includes(searchTerm)
+    )
   })
 
   useEffect(() => {
     dispatch(userActions.fetchUsersRequest())
   }, [dispatch])
 
-  const handleDeleteClick = (userId: number, userName: string) => {
-    setDeleteConfirm({ open: true, userId, userName })
+  const handleDisableClick = (userId: number, userName: string) => {
+    setDeleteConfirm({ open: true, userId, userName, actionType: 'disable' })
   }
 
-  const handleDeleteConfirm = () => {
+  const handleEnableClick = (userId: number, userName: string) => {
+    setDeleteConfirm({ open: true, userId, userName, actionType: 'enable' })
+  }
+
+  const handlePermanentDeleteClick = (userId: number, userName: string) => {
+    setDeleteConfirm({ open: true, userId, userName, actionType: 'permanent' })
+  }
+
+  const handleConfirm = () => {
     if (deleteConfirm.userId) {
-      dispatch(userActions.deleteUserRequest(deleteConfirm.userId))
+      if (deleteConfirm.actionType === 'permanent') {
+        dispatch(userActions.permanentDeleteUserRequest(deleteConfirm.userId))
+      } else if (deleteConfirm.actionType === 'enable') {
+        dispatch(userActions.enableUserRequest(deleteConfirm.userId))
+      } else {
+        dispatch(userActions.deleteUserRequest(deleteConfirm.userId))
+      }
     }
-    setDeleteConfirm({ open: false, userId: null, userName: '' })
+    setDeleteConfirm({ open: false, userId: null, userName: '', actionType: 'disable' })
   }
 
-  const handleDeleteCancel = () => {
-    setDeleteConfirm({ open: false, userId: null, userName: '' })
+  const handleCancel = () => {
+    setDeleteConfirm({ open: false, userId: null, userName: '', actionType: 'disable' })
   }
+
+  const paginatedData = filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
   return (
     <Box>
-      <AppLayoutHeader componentBreadCrumb="Users" componentTitle="User Management" />
+      <AppLayoutHeader />
 
       <Box sx={{ mt: 3 }}>
-        <PageHeader title="All Users" subtitle={`${users.length} users found`} />
+        <PageHeader subtitle={`${filteredUsers.length} users found`} />
+
+        <Box sx={{ mb: 2 }}>
+          <Grid item xs={12} sm={12} md={12} lg={12}>
+            <TextField
+              fullWidth
+              size="small"
+              variant="outlined"
+              placeholder="Search users..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ minWidth: 280, '& .MuiOutlinedInput-root': { borderRadius: 50 } }}
+            />
+          </Grid>
+        </Box>
+
+        {deleteUserAlert?.message && (
+          <Alert
+            severity={deleteUserAlert.severity ?? 'info'}
+            onClose={() => dispatch(alertActions.clearDeleteUserAlert())}
+            sx={{ mb: 2 }}
+          >
+            {deleteUserAlert.message}
+          </Alert>
+        )}
+
+        {enableUserAlert?.message && (
+          <Alert
+            severity={enableUserAlert.severity ?? 'info'}
+            onClose={() => dispatch(alertActions.clearEnableUserAlert())}
+            sx={{ mb: 2 }}
+          >
+            {enableUserAlert.message}
+          </Alert>
+        )}
+
+        {permanentDeleteUserAlert?.message && (
+          <Alert
+            severity={permanentDeleteUserAlert.severity ?? 'info'}
+            onClose={() => dispatch(alertActions.clearPermanentDeleteUserAlert())}
+            sx={{ mb: 2 }}
+          >
+            {permanentDeleteUserAlert.message}
+          </Alert>
+        )}
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -79,27 +174,37 @@ const Users: React.FC = () => {
           <TableContainer component={Paper} sx={{ mt: 2 }}>
             <Table>
               <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>Created</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
+                <StyledTableRow>
+                  <StyledTableCell>Name</StyledTableCell>
+                  <StyledTableCell>Email</StyledTableCell>
+                  <StyledTableCell>Role</StyledTableCell>
+                  <StyledTableCell>Status</StyledTableCell>
+                  <StyledTableCell>Created</StyledTableCell>
+                  <StyledTableCell align="right">Actions</StyledTableCell>
+                </StyledTableRow>
               </TableHead>
               <TableBody>
-                {users.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center">
+                {filteredUsers.length === 0 ? (
+                  <StyledTableRow>
+                    <StyledTableCell colSpan={6} align="center">
                       <Typography color="text.secondary" sx={{ py: 4 }}>
-                        No users found
+                        {searchInput ? 'No users match your search' : 'No users found'}
                       </Typography>
-                    </TableCell>
-                  </TableRow>
+                    </StyledTableCell>
+                  </StyledTableRow>
                 ) : (
-                  users.map((user) => (
-                    <TableRow key={user.userId} hover>
-                      <TableCell>
+                  paginatedData.map((user) => (
+                    <StyledTableRow
+                      key={user.userId}
+                      hover
+                      sx={{
+                        ...(user.role === 'admin'
+                          ? { '& td.MuiTableCell-body': { color: '#0166fe !important' } }
+                          : {}),
+                        ...(user.isEnabled === false ? { opacity: 0.6 } : {}),
+                      }}
+                    >
+                      <StyledTableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           {user.role === 'admin' ? (
                             <AdminIcon color="primary" fontSize="small" />
@@ -108,45 +213,110 @@ const Users: React.FC = () => {
                           )}
                           {user.name}
                         </Box>
-                      </TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
+                      </StyledTableCell>
+                      <StyledTableCell>{user.email}</StyledTableCell>
+                      <StyledTableCell>
                         <Chip
                           label={user.role.toUpperCase()}
                           size="small"
                           color={user.role === 'admin' ? 'primary' : 'default'}
                           variant="outlined"
+                          sx={
+                            user.role === 'admin'
+                              ? { borderColor: '#0166fe', color: '#0166fe' }
+                              : {}
+                          }
                         />
-                      </TableCell>
-                      <TableCell>{user.createdAt ? formatDate(user.createdAt) : '-'}</TableCell>
-                      <TableCell align="right">
+                      </StyledTableCell>
+                      <StyledTableCell>
+                        <Chip
+                          label={user.isEnabled !== false ? 'ENABLED' : 'DISABLED'}
+                          size="small"
+                          color={user.isEnabled !== false ? 'success' : 'error'}
+                          variant="outlined"
+                        />
+                      </StyledTableCell>
+                      <StyledTableCell>
+                        {user.createdAt ? formatDate(user.createdAt) : '-'}
+                      </StyledTableCell>
+                      <StyledTableCell align="right">
                         {user.role !== 'admin' && user.userId !== currentUser?.userId && (
-                          <Tooltip title="Delete User">
-                            <IconButton
-                              color="error"
-                              size="small"
-                              onClick={() => handleDeleteClick(user.userId, user.name)}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+                            {user.isEnabled !== false ? (
+                              <Tooltip title="Disable User">
+                                <IconButton
+                                  color="warning"
+                                  size="small"
+                                  onClick={() => handleDisableClick(user.userId, user.name)}
+                                >
+                                  <DisableIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            ) : (
+                              <Tooltip title="Enable User">
+                                <IconButton
+                                  color="success"
+                                  size="small"
+                                  onClick={() => handleEnableClick(user.userId, user.name)}
+                                >
+                                  <EnableIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            <Tooltip title="Permanently Delete User">
+                              <IconButton
+                                color="error"
+                                size="small"
+                                onClick={() => handlePermanentDeleteClick(user.userId, user.name)}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
                         )}
-                      </TableCell>
-                    </TableRow>
+                      </StyledTableCell>
+                    </StyledTableRow>
                   ))
                 )}
               </TableBody>
             </Table>
           </TableContainer>
         )}
+        {filteredUsers.length > 0 && (
+          <TablePagination
+            component="div"
+            count={filteredUsers.length}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10))
+              setPage(0)
+            }}
+            rowsPerPageOptions={APP_TABLE_CONFIG.ITEMS_PER_PAGE_OPTION}
+            sx={paginationSx}
+          />
+        )}
       </Box>
 
       <ConfirmationDialog
         open={deleteConfirm.open}
-        title="Delete User"
-        message={`Are you sure you want to delete "${deleteConfirm.userName}"? This action cannot be undone.`}
-        onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
+        title={
+          deleteConfirm.actionType === 'permanent'
+            ? 'Permanently Delete User'
+            : deleteConfirm.actionType === 'enable'
+              ? 'Enable User'
+              : 'Disable User'
+        }
+        message={
+          deleteConfirm.actionType === 'permanent'
+            ? `Are you sure you want to permanently delete "${deleteConfirm.userName}"? This will also delete all issues created by this user. This action cannot be undone.`
+            : deleteConfirm.actionType === 'enable'
+              ? `Are you sure you want to enable "${deleteConfirm.userName}"? The user will be able to access the system again.`
+              : `Are you sure you want to disable "${deleteConfirm.userName}"? The user will no longer be able to access the system.`
+        }
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
       />
     </Box>
   )

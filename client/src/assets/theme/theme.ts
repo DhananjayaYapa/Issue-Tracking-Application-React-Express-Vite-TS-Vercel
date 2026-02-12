@@ -1,6 +1,7 @@
 import { createTheme, styled } from '@mui/material/styles'
 import TableCell from '@mui/material/TableCell'
 import TableRow from '@mui/material/TableRow'
+import { Breadcrumbs } from '@mui/material'
 
 const primaryFontSize = 14
 
@@ -239,3 +240,30 @@ export const StyledTableRow = styled(TableRow)(() => ({
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
   },
 }))
+
+export const AppBreadcrumb = styled(Breadcrumbs)({
+  fontSize: '13px',
+  '& .MuiBreadcrumbs-separator': {
+    marginLeft: 4,
+    marginRight: 4,
+  },
+})
+
+// Common pagination styles
+export const paginationSx = {
+  color: 'rgba(255, 255, 255, 0.6)',
+  '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontWeight: 300,
+  },
+  '& .MuiTablePagination-select': {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontWeight: 600,
+  },
+  '& .MuiTablePagination-selectIcon': {
+    color: 'rgba(255, 255, 255, 0.6)',
+  },
+  '& .MuiIconButton-root': {
+    color: 'rgba(255, 255, 255, 0.6)',
+  },
+}

@@ -1,6 +1,10 @@
 import React from 'react'
 import { Chip, type ChipProps } from '@mui/material'
-import { STATUS_COLORS, PRIORITY_COLORS } from '../../../utilities/constants'
+import {
+  STATUS_COLORS,
+  PRIORITY_COLORS,
+  PRIORITY_BORDER_COLORS,
+} from '../../../utilities/constants'
 import type { IssueStatus, IssuePriority } from '../../../utilities/models'
 
 type VariantType = 'status' | 'priority'
@@ -26,7 +30,24 @@ const StatusChip: React.FC<StatusChipProps> = ({
   const colorMap = colorMaps[variant]
   const color = colorMap[value] || 'default'
 
-  return <Chip label={value} size={size} color={color} variant={outlined ? 'outlined' : 'filled'} />
+  // Custom styling for priority chips
+  const customSx =
+    outlined && variant === 'priority'
+      ? {
+          borderWidth: 2,
+          borderColor: PRIORITY_BORDER_COLORS[value] || '#9e9e9e',
+        }
+      : {}
+
+  return (
+    <Chip
+      label={value}
+      size={size}
+      color={color}
+      variant={outlined ? 'outlined' : 'filled'}
+      sx={customSx}
+    />
+  )
 }
 
 export default StatusChip

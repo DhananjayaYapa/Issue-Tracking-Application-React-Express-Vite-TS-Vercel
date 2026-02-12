@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Box, Alert } from '@mui/material'
-import { issueActions } from '../../redux/actions'
+import { Box, Alert, TablePagination } from '@mui/material'
+import { issueActions, alertActions } from '../../redux/actions'
 import type { RootState } from '../../redux/store'
 import type {
   Issue,
@@ -9,20 +9,28 @@ import type {
   IssueStatus,
   User,
 } from '../../utilities/models'
-import { PageHeader, ConfirmationDialog } from '../../components/shared'
+import { ConfirmationDialog } from '../../components/shared'
 import { IssueTable, IssueFilters, IssueDetailDialog } from '../../components/issues'
 import { userService } from '../../services/user.service'
 import styles from './Issues.module.scss'
+import { APP_TABLE_CONFIG } from '../../utilities/constants'
+import { paginationSx } from '../../assets/theme/theme'
 
 const Issues: React.FC = () => {
   const dispatch = useDispatch()
 
   const { issues, isLoading, error } = useSelector((state: RootState) => state.issues)
+  const updateIssueAlert = useSelector((state: RootState) => state.alert.updateIssueAlert)
+  const deleteIssueAlert = useSelector((state: RootState) => state.alert.deleteIssueAlert)
 
-  const [filters, setFilters] = useState<IssueFiltersType>({})
+  // Pending filters (what user selects before clicking Apply)
+  const [pendingFilters, setPendingFilters] = useState<IssueFiltersType>({})
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
   const [createdByValue, setCreatedByValue] = useState('')
+
+  // Applied filters (what triggers API call)
+  const [appliedFilters, setAppliedFilters] = useState<IssueFiltersType>({})
   const [users, setUsers] = useState<User[]>([])
 
   const [editingStatusId, setEditingStatusId] = useState<number | null>(null)
@@ -40,14 +48,32 @@ const Issues: React.FC = () => {
   const [showPriorityIcons, setShowPriorityIcons] = useState(false)
 
   const [viewIssue, setViewIssue] = useState<Issue | null>(null)
+  const [searchInput, setSearchInput] = useState('')
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [page, setPage] = useState(0)
+
+  // Filter issues based on search input
+  const filteredIssues = issues.filter((issue) => {
+    if (!searchInput.trim()) return true
+    const searchTerm = searchInput.trim().toLowerCase()
+    return (
+      issue.title.toLowerCase().includes(searchTerm) ||
+      issue.description?.toLowerCase().includes(searchTerm) ||
+      issue.status.toLowerCase().includes(searchTerm) ||
+      issue.priority.toLowerCase().includes(searchTerm) ||
+      issue.createdBy.name.toLowerCase().includes(searchTerm)
+    )
+  })
+
+  const paginatedData = filteredIssues.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
   useEffect(() => {
-    dispatch(issueActions.fetchIssuesRequest(filters))
+    dispatch(issueActions.fetchIssuesRequest(appliedFilters))
     dispatch(issueActions.fetchMetadataRequest())
     userService.getUsers().then((res) => {
       setUsers(res.data.data || [])
     })
-  }, [dispatch, filters])
+  }, [dispatch, appliedFilters])
 
   const userOptions = users.map((u) => ({
     value: String(u.userId),
@@ -55,16 +81,25 @@ const Issues: React.FC = () => {
   }))
 
   const handleApplyFilters = () => {
-    setFilters((prev) => ({
-      ...prev,
+    setAppliedFilters({
+      ...pendingFilters,
       fromDate: fromDate || undefined,
       toDate: toDate || undefined,
       createdBy: createdByValue ? Number(createdByValue) : undefined,
-    }))
+    })
+  }
+
+  const handleResetFilters = () => {
+    setPendingFilters({})
+    setFromDate('')
+    setToDate('')
+    setCreatedByValue('')
+    setAppliedFilters({})
+    setSearchInput('')
   }
 
   const handleFilterChange = (key: keyof IssueFiltersType, value: string) => {
-    setFilters((prev) => ({
+    setPendingFilters((prev) => ({
       ...prev,
       [key]: value || undefined,
     }))
@@ -89,7 +124,7 @@ const Issues: React.FC = () => {
       )
       setEditingStatusId(null)
       setTimeout(() => {
-        dispatch(issueActions.fetchIssuesRequest(filters))
+        dispatch(issueActions.fetchIssuesRequest(appliedFilters))
       }, 500)
     }
     setStatusDialogOpen(false)
@@ -115,7 +150,7 @@ const Issues: React.FC = () => {
     if (deleteIssueId) {
       dispatch(issueActions.deleteIssueRequest(deleteIssueId))
       setTimeout(() => {
-        dispatch(issueActions.fetchIssuesRequest(filters))
+        dispatch(issueActions.fetchIssuesRequest(appliedFilters))
       }, 500)
     }
     handleCloseDelete()
@@ -123,25 +158,42 @@ const Issues: React.FC = () => {
 
   return (
     <Box className={styles.issuesPage}>
-      <PageHeader title="Issues" />
+      {updateIssueAlert?.message && (
+        <Alert
+          severity={updateIssueAlert.severity ?? 'info'}
+          onClose={() => dispatch(alertActions.clearUpdateIssueAlert())}
+          sx={{ mb: 2 }}
+        >
+          {updateIssueAlert.message}
+        </Alert>
+      )}
+
+      {deleteIssueAlert?.message && (
+        <Alert
+          severity={deleteIssueAlert.severity ?? 'info'}
+          onClose={() => dispatch(alertActions.clearDeleteIssueAlert())}
+          sx={{ mb: 2 }}
+        >
+          {deleteIssueAlert.message}
+        </Alert>
+      )}
 
       <IssueFilters
-        filters={filters}
+        filters={pendingFilters}
         fromDate={fromDate}
         toDate={toDate}
         onFromDateChange={setFromDate}
         onToDateChange={setToDate}
         onFilterChange={handleFilterChange}
         onApply={handleApplyFilters}
+        onReset={handleResetFilters}
         loading={isLoading}
-        showStatusIcons={showStatusIcons}
-        showPriorityIcons={showPriorityIcons}
-        onToggleStatusIcons={() => setShowStatusIcons(!showStatusIcons)}
-        onTogglePriorityIcons={() => setShowPriorityIcons(!showPriorityIcons)}
         showCreatedBy
         userOptions={userOptions}
         createdByValue={createdByValue}
         onCreatedByChange={setCreatedByValue}
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
       />
 
       {error && (
@@ -151,19 +203,36 @@ const Issues: React.FC = () => {
       )}
 
       <IssueTable
-        issues={issues}
+        issues={paginatedData}
         loading={isLoading}
         onEdit={() => {}}
         onDelete={handleOpenDelete}
         onView={(issue) => setViewIssue(issue)}
-        onComment={() => {}}
         onStatusChange={handleStatusChange}
         editingStatusId={editingStatusId}
         onEditStatusToggle={handleEditStatusToggle}
         showActions={true}
         showStatusIcons={showStatusIcons}
         showPriorityIcons={showPriorityIcons}
-      />
+        onToggleStatusIcons={() => setShowStatusIcons(!showStatusIcons)}
+        onTogglePriorityIcons={() => setShowPriorityIcons(!showPriorityIcons)}
+      >
+        {filteredIssues.length > 0 && (
+          <TablePagination
+            component="div"
+            count={filteredIssues.length}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10))
+              setPage(0)
+            }}
+            rowsPerPageOptions={APP_TABLE_CONFIG.ITEMS_PER_PAGE_OPTION}
+            sx={paginationSx}
+          />
+        )}
+      </IssueTable>
 
       <ConfirmationDialog
         open={deleteDialogOpen}

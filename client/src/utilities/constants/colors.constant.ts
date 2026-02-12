@@ -18,3 +18,11 @@ export const PRIORITY_COLORS: Record<
   High: 'warning',
   Critical: 'error',
 }
+
+// Custom border colors for outlined priority chips (hex values for visibility)
+export const PRIORITY_BORDER_COLORS: Record<string, string> = {
+  Low: '#9e9e9e',
+  Medium: '#1976d2',
+  High: '#ed6c02',
+  Critical: '#d32f2f',
+}

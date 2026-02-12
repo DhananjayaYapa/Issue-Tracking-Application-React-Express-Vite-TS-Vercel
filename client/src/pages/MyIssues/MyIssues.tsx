@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Box, Alert } from '@mui/material'
+import { Box, Alert, TablePagination } from '@mui/material'
 import { Add as AddIcon } from '@mui/icons-material'
-import { issueActions } from '../../redux/actions'
+import { issueActions, alertActions } from '../../redux/actions'
 import type { RootState } from '../../redux/store'
 import type {
   Issue,
@@ -19,6 +19,8 @@ import {
 } from '../../components/issues'
 import styles from './MyIssues.module.scss'
 import { validateFormData } from '../../utilities/helpers/formValidator'
+import { APP_TABLE_CONFIG } from '../../utilities/constants'
+import { paginationSx } from '../../assets/theme/theme'
 
 const ISSUE_INITIAL_STATE: IssueFormData = {
   title: {
@@ -45,9 +47,22 @@ const MyIssues: React.FC = () => {
   const dispatch = useDispatch()
 
   const { issues, isLoading, error } = useSelector((state: RootState) => state.issues)
-  const [filters, setFilters] = useState<IssueFiltersType>({})
+  const currentUser = useSelector((state: RootState) => state.auth.user)
+  const isUserDisabled = currentUser?.isEnabled === false
+  const createIssueAlert = useSelector((state: RootState) => state.alert.createIssueAlert)
+  const updateIssueAlert = useSelector((state: RootState) => state.alert.updateIssueAlert)
+  const deleteIssueAlert = useSelector((state: RootState) => state.alert.deleteIssueAlert)
+
+  // Pending filters (what user selects before clicking Apply)
+  const [pendingFilters, setPendingFilters] = useState<IssueFiltersType>({})
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
+
+  // Applied filters (what triggers actual filtering)
+  const [appliedFilters, setAppliedFilters] = useState<IssueFiltersType>({})
+  const [appliedFromDate, setAppliedFromDate] = useState('')
+  const [appliedToDate, setAppliedToDate] = useState('')
+
   const [formOpen, setFormOpen] = useState(false)
   const [currentIssue, setCurrentIssue] = useState<Issue | null>(null)
   const [issueFormData, setIssueFormData] = useState<IssueFormData>(ISSUE_INITIAL_STATE)
@@ -57,6 +72,9 @@ const MyIssues: React.FC = () => {
   const [showStatusIcons, setShowStatusIcons] = useState(false)
   const [showPriorityIcons, setShowPriorityIcons] = useState(false)
   const [viewIssue, setViewIssue] = useState<Issue | null>(null)
+  const [searchInput, setSearchInput] = useState('')
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [page, setPage] = useState(0)
 
   useEffect(() => {
     dispatch(issueActions.fetchMyIssuesRequest())
@@ -65,27 +83,52 @@ const MyIssues: React.FC = () => {
 
   const filteredIssues = issues.filter((issue) => {
     let match = true
-    if (filters.status && issue.status !== filters.status) match = false
-    if (filters.priority && issue.priority !== filters.priority) match = false
-    if (fromDate) {
+    if (appliedFilters.status && issue.status !== appliedFilters.status) match = false
+    if (appliedFilters.priority && issue.priority !== appliedFilters.priority) match = false
+    if (appliedFromDate) {
       const issueDate = new Date(issue.createdAt)
-      if (issueDate < new Date(fromDate)) match = false
+      if (issueDate < new Date(appliedFromDate)) match = false
     }
-    if (toDate) {
+    if (appliedToDate) {
       const issueDate = new Date(issue.createdAt)
-      const end = new Date(toDate)
+      const end = new Date(appliedToDate)
       end.setHours(23, 59, 59, 999)
       if (issueDate > end) match = false
+    }
+    // Search filter
+    if (searchInput.trim()) {
+      const searchTerm = searchInput.trim().toLowerCase()
+      const searchMatch =
+        issue.title.toLowerCase().includes(searchTerm) ||
+        issue.description?.toLowerCase().includes(searchTerm) ||
+        issue.status.toLowerCase().includes(searchTerm) ||
+        issue.priority.toLowerCase().includes(searchTerm) ||
+        issue.createdBy.name.toLowerCase().includes(searchTerm)
+      if (!searchMatch) match = false
     }
     return match
   })
 
+  const paginatedData = filteredIssues.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
   const handleApplyFilters = () => {
-    setFilters((prev) => ({ ...prev }))
+    setAppliedFilters({ ...pendingFilters })
+    setAppliedFromDate(fromDate)
+    setAppliedToDate(toDate)
+  }
+
+  const handleResetFilters = () => {
+    setPendingFilters({})
+    setFromDate('')
+    setToDate('')
+    setAppliedFilters({})
+    setAppliedFromDate('')
+    setAppliedToDate('')
+    setSearchInput('')
   }
 
   const handleFilterChange = (key: keyof IssueFiltersType, value: string) => {
-    setFilters((prev) => ({
+    setPendingFilters((prev) => ({
       ...prev,
       [key]: value || undefined,
     }))
@@ -183,25 +226,60 @@ const MyIssues: React.FC = () => {
   return (
     <Box className={styles.myIssuesPage}>
       <PageHeader
-        title="My Issues"
         actionLabel="New Issue"
         actionIcon={<AddIcon />}
         onAction={handleOpenCreate}
+        actionDisabled={isUserDisabled}
       />
 
+      {isUserDisabled && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Your account has been disabled. You cannot create, edit, or delete issues.
+        </Alert>
+      )}
+
+      {createIssueAlert?.message && (
+        <Alert
+          severity={createIssueAlert.severity ?? 'info'}
+          sx={{ mb: 2 }}
+          onClose={() => dispatch(alertActions.clearCreateIssueAlert())}
+        >
+          {createIssueAlert.message}
+        </Alert>
+      )}
+
+      {updateIssueAlert?.message && (
+        <Alert
+          severity={updateIssueAlert.severity ?? 'info'}
+          sx={{ mb: 2 }}
+          onClose={() => dispatch(alertActions.clearUpdateIssueAlert())}
+        >
+          {updateIssueAlert.message}
+        </Alert>
+      )}
+
+      {deleteIssueAlert?.message && (
+        <Alert
+          severity={deleteIssueAlert.severity ?? 'info'}
+          sx={{ mb: 2 }}
+          onClose={() => dispatch(alertActions.clearDeleteIssueAlert())}
+        >
+          {deleteIssueAlert.message}
+        </Alert>
+      )}
+
       <IssueFilters
-        filters={filters}
+        filters={pendingFilters}
         fromDate={fromDate}
         toDate={toDate}
         onFromDateChange={setFromDate}
         onToDateChange={setToDate}
         onFilterChange={handleFilterChange}
         onApply={handleApplyFilters}
+        onReset={handleResetFilters}
         loading={isLoading}
-        showStatusIcons={showStatusIcons}
-        showPriorityIcons={showPriorityIcons}
-        onToggleStatusIcons={() => setShowStatusIcons(!showStatusIcons)}
-        onTogglePriorityIcons={() => setShowPriorityIcons(!showPriorityIcons)}
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
       />
 
       {error && (
@@ -211,14 +289,33 @@ const MyIssues: React.FC = () => {
       )}
 
       <IssueTable
-        issues={filteredIssues}
+        issues={paginatedData}
         loading={isLoading}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
         onView={(issue) => setViewIssue(issue)}
         showStatusIcons={showStatusIcons}
         showPriorityIcons={showPriorityIcons}
-      />
+        onToggleStatusIcons={() => setShowStatusIcons(!showStatusIcons)}
+        onTogglePriorityIcons={() => setShowPriorityIcons(!showPriorityIcons)}
+        disableEditDelete={isUserDisabled}
+      >
+        {filteredIssues.length > 0 && (
+          <TablePagination
+            component="div"
+            count={filteredIssues.length}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10))
+              setPage(0)
+            }}
+            rowsPerPageOptions={APP_TABLE_CONFIG.ITEMS_PER_PAGE_OPTION}
+            sx={paginationSx}
+          />
+        )}
+      </IssueTable>
 
       <IssueFormDialog
         open={formOpen}
