@@ -6,3 +6,7 @@ export interface UserManagementStateDto {
   isLoading: boolean
   error: string | null
 }
+
+export interface UserParams {
+  id: number
+}

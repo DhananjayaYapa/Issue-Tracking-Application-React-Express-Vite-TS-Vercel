@@ -3,6 +3,7 @@ import { call, put, takeLatest } from 'redux-saga/effects'
 import { authService } from '../../services'
 import { authActions } from '../actions'
 import { AUTH_ACTION_TYPES, COMMON_ACTION_TYPES } from '../../utilities/constants'
+import { dispatchAlert } from '../../utilities/helpers'
 import type {
   LoginPayload,
   RegisterPayload,
@@ -82,8 +83,18 @@ function* updateProfileSaga(action: { type: string; payload: { name: string } })
       action.payload
     )
     yield put(authActions.updateProfileSuccess(response.data.data))
+    yield* dispatchAlert(
+      AUTH_ACTION_TYPES.UPDATE_PROFILE,
+      response.data.message || 'Profile updated successfully',
+      'success'
+    )
   } catch (error: any) {
     yield put(authActions.updateProfileError(error))
+    yield* dispatchAlert(
+      AUTH_ACTION_TYPES.UPDATE_PROFILE,
+      error || 'Failed to update profile',
+      'error'
+    )
   }
 }
 
@@ -93,10 +104,23 @@ function* changePasswordSaga(action: {
   payload: { currentPassword: string; newPassword: string }
 }) {
   try {
-    yield call(authService.changePassword, action.payload)
+    const response: AxiosResponse<ApiResponseDto<null>> = yield call(
+      authService.changePassword,
+      action.payload
+    )
     yield put(authActions.changePasswordSuccess())
+    yield* dispatchAlert(
+      AUTH_ACTION_TYPES.CHANGE_PASSWORD,
+      response.data.message || 'Password changed successfully',
+      'success'
+    )
   } catch (error: any) {
     yield put(authActions.changePasswordError(error))
+    yield* dispatchAlert(
+      AUTH_ACTION_TYPES.CHANGE_PASSWORD,
+      error || 'Failed to change password',
+      'error'
+    )
   }
 }
 

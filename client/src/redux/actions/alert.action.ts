@@ -2,6 +2,7 @@ import {
   ISSUE_ACTION_TYPES,
   USER_ACTION_TYPES,
   EXPORT_ACTION_TYPES,
+  AUTH_ACTION_TYPES,
   COMMON_ACTION_TYPES,
 } from '../../utilities/constants'
 
@@ -36,6 +37,15 @@ const clearDownloadReportAlert = () => ({
   type: EXPORT_ACTION_TYPES.DOWNLOAD_REPORT + COMMON_ACTION_TYPES.CLEAR_ALERT,
 })
 
+// Profile alerts
+const clearUpdateProfileAlert = () => ({
+  type: AUTH_ACTION_TYPES.UPDATE_PROFILE + COMMON_ACTION_TYPES.CLEAR_ALERT,
+})
+
+const clearChangePasswordAlert = () => ({
+  type: AUTH_ACTION_TYPES.CHANGE_PASSWORD + COMMON_ACTION_TYPES.CLEAR_ALERT,
+})
+
 export const alertActions = {
   // Issue
   clearCreateIssueAlert,
@@ -47,4 +57,7 @@ export const alertActions = {
   clearPermanentDeleteUserAlert,
   // Export
   clearDownloadReportAlert,
+  // Profile
+  clearUpdateProfileAlert,
+  clearChangePasswordAlert,
 }

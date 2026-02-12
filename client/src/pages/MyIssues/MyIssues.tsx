@@ -43,23 +43,22 @@ const ISSUE_INITIAL_STATE: IssueFormData = {
   priority: { value: 'Medium', validator: 'text', isRequired: true, error: null },
 }
 
+const INITIAL_FILTERS_STATE: IssueFiltersType = {}
+
 const MyIssues: React.FC = () => {
   const dispatch = useDispatch()
 
-  const { issues, isLoading, error } = useSelector((state: RootState) => state.issues)
+  const issueState = useSelector((state: RootState) => state.issues)
+  const { data: issues, isLoading, error } = issueState.fetchMyIssues
   const currentUser = useSelector((state: RootState) => state.auth.user)
   const isUserDisabled = currentUser?.isEnabled === false
   const createIssueAlert = useSelector((state: RootState) => state.alert.createIssueAlert)
   const updateIssueAlert = useSelector((state: RootState) => state.alert.updateIssueAlert)
   const deleteIssueAlert = useSelector((state: RootState) => state.alert.deleteIssueAlert)
-
-  // Pending filters (what user selects before clicking Apply)
-  const [pendingFilters, setPendingFilters] = useState<IssueFiltersType>({})
+  const [pendingFilters, setPendingFilters] = useState(INITIAL_FILTERS_STATE)
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
-
-  // Applied filters (what triggers actual filtering)
-  const [appliedFilters, setAppliedFilters] = useState<IssueFiltersType>({})
+  const [appliedFilters, setAppliedFilters] = useState(INITIAL_FILTERS_STATE)
   const [appliedFromDate, setAppliedFromDate] = useState('')
   const [appliedToDate, setAppliedToDate] = useState('')
 
@@ -77,8 +76,8 @@ const MyIssues: React.FC = () => {
   const [page, setPage] = useState(0)
 
   useEffect(() => {
-    dispatch(issueActions.fetchMyIssuesRequest())
-    dispatch(issueActions.fetchMetadataRequest())
+    dispatch(issueActions.fetchMyIssues())
+    dispatch(issueActions.fetchMetadata())
   }, [dispatch])
 
   const filteredIssues = issues.filter((issue) => {
@@ -118,10 +117,10 @@ const MyIssues: React.FC = () => {
   }
 
   const handleResetFilters = () => {
-    setPendingFilters({})
+    setPendingFilters(INITIAL_FILTERS_STATE)
     setFromDate('')
     setToDate('')
-    setAppliedFilters({})
+    setAppliedFilters(INITIAL_FILTERS_STATE)
     setAppliedFromDate('')
     setAppliedToDate('')
     setSearchInput('')
@@ -162,14 +161,14 @@ const MyIssues: React.FC = () => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFormChange = (property: string, value: any) => {
-    setIssueFormData({
-      ...issueFormData,
+    setIssueFormData((prev) => ({
+      ...prev,
       [property]: {
-        ...issueFormData[property as keyof typeof issueFormData],
+        ...prev[property as keyof typeof prev],
         value: value,
         error: null,
       },
-    })
+    }))
   }
 
   const handleSaveIssue = async () => {
@@ -188,16 +187,16 @@ const MyIssues: React.FC = () => {
 
     if (currentIssue) {
       dispatch(
-        issueActions.updateIssueRequest({
+        issueActions.updateIssue({
           id: currentIssue.id,
           ...payload,
         })
       )
     } else {
-      dispatch(issueActions.createIssueRequest(payload))
+      dispatch(issueActions.createIssue(payload))
     }
     setTimeout(() => {
-      dispatch(issueActions.fetchMyIssuesRequest())
+      dispatch(issueActions.fetchMyIssues())
     }, 500)
 
     handleCloseForm()
@@ -215,12 +214,49 @@ const MyIssues: React.FC = () => {
 
   const handleConfirmDelete = () => {
     if (deleteIssueId) {
-      dispatch(issueActions.deleteIssueRequest(deleteIssueId))
+      dispatch(issueActions.deleteIssue({ id: deleteIssueId }))
       setTimeout(() => {
-        dispatch(issueActions.fetchMyIssuesRequest())
+        dispatch(issueActions.fetchMyIssues())
       }, 500)
     }
     handleCloseDelete()
+  }
+
+  const handleViewIssue = (issue: Issue) => {
+    setViewIssue(issue)
+  }
+
+  const handleCloseViewDialog = () => {
+    setViewIssue(null)
+  }
+
+  const handleToggleStatusIcons = () => {
+    setShowStatusIcons(!showStatusIcons)
+  }
+
+  const handleTogglePriorityIcons = () => {
+    setShowPriorityIcons(!showPriorityIcons)
+  }
+
+  const handlePageChange = (_: unknown, newPage: number) => {
+    setPage(newPage)
+  }
+
+  const handleRowsPerPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(e.target.value, 10))
+    setPage(0)
+  }
+
+  const handleClearCreateIssueAlert = () => {
+    dispatch(alertActions.clearCreateIssueAlert())
+  }
+
+  const handleClearUpdateIssueAlert = () => {
+    dispatch(alertActions.clearUpdateIssueAlert())
+  }
+
+  const handleClearDeleteIssueAlert = () => {
+    dispatch(alertActions.clearDeleteIssueAlert())
   }
 
   return (
@@ -242,7 +278,7 @@ const MyIssues: React.FC = () => {
         <Alert
           severity={createIssueAlert.severity ?? 'info'}
           sx={{ mb: 2 }}
-          onClose={() => dispatch(alertActions.clearCreateIssueAlert())}
+          onClose={handleClearCreateIssueAlert}
         >
           {createIssueAlert.message}
         </Alert>
@@ -252,7 +288,7 @@ const MyIssues: React.FC = () => {
         <Alert
           severity={updateIssueAlert.severity ?? 'info'}
           sx={{ mb: 2 }}
-          onClose={() => dispatch(alertActions.clearUpdateIssueAlert())}
+          onClose={handleClearUpdateIssueAlert}
         >
           {updateIssueAlert.message}
         </Alert>
@@ -262,7 +298,7 @@ const MyIssues: React.FC = () => {
         <Alert
           severity={deleteIssueAlert.severity ?? 'info'}
           sx={{ mb: 2 }}
-          onClose={() => dispatch(alertActions.clearDeleteIssueAlert())}
+          onClose={handleClearDeleteIssueAlert}
         >
           {deleteIssueAlert.message}
         </Alert>
@@ -293,11 +329,11 @@ const MyIssues: React.FC = () => {
         loading={isLoading}
         onEdit={handleOpenEdit}
         onDelete={handleOpenDelete}
-        onView={(issue) => setViewIssue(issue)}
+        onView={handleViewIssue}
         showStatusIcons={showStatusIcons}
         showPriorityIcons={showPriorityIcons}
-        onToggleStatusIcons={() => setShowStatusIcons(!showStatusIcons)}
-        onTogglePriorityIcons={() => setShowPriorityIcons(!showPriorityIcons)}
+        onToggleStatusIcons={handleToggleStatusIcons}
+        onTogglePriorityIcons={handleTogglePriorityIcons}
         disableEditDelete={isUserDisabled}
       >
         {filteredIssues.length > 0 && (
@@ -305,12 +341,9 @@ const MyIssues: React.FC = () => {
             component="div"
             count={filteredIssues.length}
             page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
+            onPageChange={handlePageChange}
             rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10))
-              setPage(0)
-            }}
+            onRowsPerPageChange={handleRowsPerPageChange}
             rowsPerPageOptions={APP_TABLE_CONFIG.ITEMS_PER_PAGE_OPTION}
             sx={paginationSx}
           />
@@ -341,7 +374,7 @@ const MyIssues: React.FC = () => {
         onCancel={handleCloseDelete}
       />
 
-      <IssueDetailDialog open={!!viewIssue} onClose={() => setViewIssue(null)} issue={viewIssue} />
+      <IssueDetailDialog open={!!viewIssue} onClose={handleCloseViewDialog} issue={viewIssue} />
     </Box>
   )
 }

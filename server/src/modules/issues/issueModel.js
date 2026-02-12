@@ -3,16 +3,7 @@ const { Op } = require("sequelize");
 const { ISSUE_STATUS } = require("../../shared/constants/issueConstants");
 
 class IssueModel {
-  /**
-   * Get all issues with filters
-   * @param {Object} options - { status, priority, search, sortBy, sortOrder, createdBy }
-   * @returns {Promise<Array>} - Array of issues
-   */
-  /**
-   * Get all issues with filters
-   * @param {Object} options - { status, priority, search, sortBy, sortOrder, createdBy }
-   * @returns {Promise<Array>} - Array of issues
-   */
+  // Get all issues
   static async getAllIssues(options = {}) {
     const {
       status,
@@ -30,14 +21,34 @@ class IssueModel {
     const where = {};
     if (createdBy) where.createdBy = createdBy;
 
-    if (fromDate || toDate) {
-      where.created_at = {};
-      if (fromDate) where.created_at[Op.gte] = new Date(fromDate);
-      if (toDate) {
-        const end = new Date(toDate);
-        end.setHours(23, 59, 59, 999);
-        where.created_at[Op.lte] = end;
-      }
+    if (fromDate && toDate) {
+      // Both dates provided - filter as a range
+      where.created_at = {
+        [Op.gte]: new Date(fromDate),
+        [Op.lte]: (() => {
+          const end = new Date(toDate);
+          end.setHours(23, 59, 59, 999);
+          return end;
+        })(),
+      };
+    } else if (fromDate) {
+      // Only fromDate provided - filter for that specific date
+      const start = new Date(fromDate);
+      const end = new Date(fromDate);
+      end.setHours(23, 59, 59, 999);
+      where.created_at = {
+        [Op.gte]: start,
+        [Op.lte]: end,
+      };
+    } else if (toDate) {
+      // Only toDate provided - filter for that specific date
+      const start = new Date(toDate);
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
+      where.created_at = {
+        [Op.gte]: start,
+        [Op.lte]: end,
+      };
     }
 
     // Relation wheres
@@ -108,11 +119,7 @@ class IssueModel {
     }));
   }
 
-  /**
-   * Get single issue by ID
-   * @param {number} issueId - Issue ID
-   * @returns {Promise<Object|null>} - Issue object or null
-   */
+  // Get issue by ID
   static async getIssueById(issueId) {
     const IssueStatus = require("../../config/db/models/IssueStatus");
     const IssuePriority = require("../../config/db/models/IssuePriority");
@@ -147,11 +154,7 @@ class IssueModel {
     };
   }
 
-  /**
-   * Create new issue
-   * @param {Object} issueData - { title, description, status, priority, createdBy }
-   * @returns {Promise<Object>} - Created issue
-   */
+  // Create new issue
   static async createIssue(issueData) {
     const IssueStatus = require("../../config/db/models/IssueStatus");
     const IssuePriority = require("../../config/db/models/IssuePriority");
@@ -182,12 +185,7 @@ class IssueModel {
     return { insertId: issue.issueId };
   }
 
-  /**
-   * Update issue
-   * @param {number} issueId - Issue ID
-   * @param {Object} issueData - Fields to update
-   * @returns {Promise<Object>} - Update result
-   */
+ // Update issue
   static async updateIssue(issueId, issueData) {
     const IssueStatus = require("../../config/db/models/IssueStatus");
     const IssuePriority = require("../../config/db/models/IssuePriority");
@@ -228,12 +226,7 @@ class IssueModel {
     return { affectedRows };
   }
 
-  /**
-   * Update issue status only
-   * @param {number} issueId - Issue ID
-   * @param {string} status - New status
-   * @returns {Promise<Object>} - Update result
-   */
+  // Update issue status
   static async updateStatus(issueId, status) {
     const IssueStatus = require("../../config/db/models/IssueStatus");
     const statusObj = await IssueStatus.findOne({ where: { name: status } });
@@ -255,11 +248,7 @@ class IssueModel {
     return { affectedRows };
   }
 
-  /**
-   * Delete issue
-   * @param {number} issueId - Issue ID
-   * @returns {Promise<Object>} - Delete result
-   */
+  // Delete issue
   static async deleteIssue(issueId) {
     const affectedRows = await Issue.destroy({
       where: { issueId },
@@ -267,14 +256,7 @@ class IssueModel {
     return { affectedRows };
   }
 
-  /**
-   * Get issue counts by status
-   * @returns {Promise<Object>}
-   */
-  /**
-   * Get issue counts by status
-   * @returns {Promise<Object>}
-   */
+  // Get issue counts by status for all issues
   static async getStatusCounts() {
     const IssueStatus = require("../../config/db/models/IssueStatus");
 
@@ -312,11 +294,7 @@ class IssueModel {
     return counts;
   }
 
-  /**
-   * Get issue counts by status for a specific user
-   * @param {number} userId - User ID
-   * @returns {Promise<Object>}
-   */
+  // Get issue counts by status for a specific user
   static async getMyStatusCounts(userId) {
     const IssueStatus = require("../../config/db/models/IssueStatus");
 
@@ -355,11 +333,7 @@ class IssueModel {
     return counts;
   }
 
-  /**
-   * Check if issue exists
-   * @param {number} issueId - Issue ID
-   * @returns {Promise<boolean>} - True if exists
-   */
+  // Check if issue exists
   static async issueExists(issueId) {
     const count = await Issue.count({
       where: { issueId },
@@ -367,12 +341,7 @@ class IssueModel {
     return count > 0;
   }
 
-  /**
-   * Check if user is the creator of the issue
-   * @param {number} issueId - Issue ID
-   * @param {number} userId - User ID
-   * @returns {Promise<boolean>} - True if user is the creator
-   */
+  // Check if user is the creator of the issue
   static async isIssueOwner(issueId, userId) {
     const count = await Issue.count({
       where: { issueId, createdBy: userId },
@@ -380,11 +349,7 @@ class IssueModel {
     return count > 0;
   }
 
-  /**
-   * Get all issues for export
-   * @param {Object} options - { status, priority, search }
-   * @returns {Promise<Array>} - All matching issues
-   */
+  // Get all issues for export
   static async getIssuesForExport(options = {}) {
     const { status, priority, fromDate, toDate, createdBy } = options;
 
@@ -392,14 +357,34 @@ class IssueModel {
 
     if (createdBy) where.createdBy = createdBy;
 
-    if (fromDate || toDate) {
-      where.created_at = {};
-      if (fromDate) where.created_at[Op.gte] = new Date(fromDate);
-      if (toDate) {
-        const end = new Date(toDate);
-        end.setHours(23, 59, 59, 999);
-        where.created_at[Op.lte] = end;
-      }
+    if (fromDate && toDate) {
+      // Both dates provided - filter as a range
+      where.created_at = {
+        [Op.gte]: new Date(fromDate),
+        [Op.lte]: (() => {
+          const end = new Date(toDate);
+          end.setHours(23, 59, 59, 999);
+          return end;
+        })(),
+      };
+    } else if (fromDate) {
+      // Only fromDate provided - filter for that specific date
+      const start = new Date(fromDate);
+      const end = new Date(fromDate);
+      end.setHours(23, 59, 59, 999);
+      where.created_at = {
+        [Op.gte]: start,
+        [Op.lte]: end,
+      };
+    } else if (toDate) {
+      // Only toDate provided - filter for that specific date
+      const start = new Date(toDate);
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
+      where.created_at = {
+        [Op.gte]: start,
+        [Op.lte]: end,
+      };
     }
 
     const IssueStatus = require("../../config/db/models/IssueStatus");
@@ -447,10 +432,7 @@ class IssueModel {
     }));
   }
 
-  /**
-   * Get metadata (statuses, priorities)
-   * @returns {Promise<Object>} - Metadata arrays
-   */
+  // Get metadata (statuses, priorities)
   static async getMetadata() {
     const IssueStatus = require("../../config/db/models/IssueStatus");
     const IssuePriority = require("../../config/db/models/IssuePriority");

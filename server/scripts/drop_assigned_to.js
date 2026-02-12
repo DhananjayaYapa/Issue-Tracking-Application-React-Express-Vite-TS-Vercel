@@ -1,7 +1,3 @@
-/**
- * Migration script to drop assigned_to column from issues table
- * Run: node scripts/drop_assigned_to.js
- */
 require("dotenv").config();
 const { sequelize } = require("../src/config/db/models");
 

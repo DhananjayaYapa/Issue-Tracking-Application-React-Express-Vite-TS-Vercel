@@ -30,6 +30,11 @@ export interface UpdateIssuePayload extends Partial<CreateIssuePayload> {
   id: number
 }
 
+export interface UpdateIssueStatusDto {
+  id: number
+  status: IssueStatus
+}
+
 export interface IssueFiltersDto {
   status?: IssueStatus
   priority?: IssuePriority
@@ -59,6 +64,19 @@ export interface StatusCountsDto {
 export interface IssueMetadataDto {
   statuses: string[]
   priorities: string[]
+}
+
+// Params types for actions (admin-react-poc pattern)
+export interface IssueParams {
+  id: number
+}
+
+export interface FetchIssuesParams {
+  filters?: IssueFiltersDto
+}
+
+export interface FetchMyIssuesParams {
+  filters?: IssueFiltersDto
 }
 
 export interface IssueStateDto {

@@ -1,61 +1,68 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { call, put, takeLatest } from 'redux-saga/effects'
 import { issueService } from '../../services'
-import { issueActions } from '../actions'
 import { ISSUE_ACTION_TYPES, COMMON_ACTION_TYPES } from '../../utilities/constants'
 import { dispatchAlert } from '../../utilities/helpers'
 import type {
   IssueFiltersDto,
   CreateIssuePayload,
   UpdateIssuePayload,
-  Issue,
-  StatusCountsDto,
-  ApiResponseDto,
-  IssueMetadataDto,
+  IssueParams,
 } from '../../utilities/models'
-import type { AxiosResponse } from 'axios'
 
 // Fetch issues list saga
-function* fetchIssuesSaga(action: { type: string; payload: IssueFiltersDto }) {
+function* fetchIssuesSaga(action: { type: string; params?: { filters?: IssueFiltersDto } }) {
   try {
-    const response: AxiosResponse<ApiResponseDto<Issue[]>> = yield call(
-      issueService.getIssues,
-      action.payload
-    )
-    yield put(issueActions.fetchIssuesSuccess(response.data.data))
+    // @ts-expect-error-ignore
+    const response = yield call(issueService.getIssues, action.params?.filters)
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_ISSUES + COMMON_ACTION_TYPES.SUCCESS,
+      data: response.data.data,
+    })
   } catch (error: any) {
-    yield put(issueActions.fetchIssuesError(error))
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_ISSUES + COMMON_ACTION_TYPES.ERROR,
+      error: error as string,
+    })
   }
 }
 
 // Fetch single issue saga
-function* fetchIssueSaga(action: { type: string; payload: number }) {
+function* fetchIssueSaga(action: { type: string; params: IssueParams }) {
   try {
-    const response: AxiosResponse<ApiResponseDto<Issue>> = yield call(
-      issueService.getIssue,
-      action.payload
-    )
-    yield put(issueActions.fetchIssueSuccess(response.data.data))
+    // @ts-expect-error-ignore
+    const response = yield call(issueService.getIssue, action.params)
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_ISSUE + COMMON_ACTION_TYPES.SUCCESS,
+      data: response.data.data,
+    })
   } catch (error: any) {
-    yield put(issueActions.fetchIssueError(error))
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_ISSUE + COMMON_ACTION_TYPES.ERROR,
+      error: error as string,
+    })
   }
 }
 
 // Create issue saga
 function* createIssueSaga(action: { type: string; payload: CreateIssuePayload }) {
   try {
-    const response: AxiosResponse<ApiResponseDto<Issue>> = yield call(
-      issueService.createIssue,
-      action.payload
-    )
-    yield put(issueActions.createIssueSuccess(response.data.data))
+    // @ts-expect-error-ignore
+    const response = yield call(issueService.createIssue, action.payload)
+    yield put({
+      type: ISSUE_ACTION_TYPES.CREATE_ISSUE + COMMON_ACTION_TYPES.SUCCESS,
+      data: response.data.data,
+    })
     yield* dispatchAlert(
       ISSUE_ACTION_TYPES.CREATE_ISSUE,
       response.data.message || 'Issue created successfully',
       'success'
     )
   } catch (error: any) {
-    yield put(issueActions.createIssueError(error))
+    yield put({
+      type: ISSUE_ACTION_TYPES.CREATE_ISSUE + COMMON_ACTION_TYPES.ERROR,
+      error: error as string,
+    })
     const backendMessage =
       error?.response?.data?.message || error?.response?.data?.error || error?.message
     yield* dispatchAlert(
@@ -70,19 +77,22 @@ function* createIssueSaga(action: { type: string; payload: CreateIssuePayload })
 function* updateIssueSaga(action: { type: string; payload: UpdateIssuePayload }) {
   try {
     const { id, ...data } = action.payload
-    const response: AxiosResponse<ApiResponseDto<Issue>> = yield call(
-      issueService.updateIssue,
-      id,
-      data
-    )
-    yield put(issueActions.updateIssueSuccess(response.data.data))
+    // @ts-expect-error-ignore
+    const response = yield call(issueService.updateIssue, { id }, data)
+    yield put({
+      type: ISSUE_ACTION_TYPES.UPDATE_ISSUE + COMMON_ACTION_TYPES.SUCCESS,
+      data: response.data.data,
+    })
     yield* dispatchAlert(
       ISSUE_ACTION_TYPES.UPDATE_ISSUE,
       response.data.message || 'Issue updated successfully',
       'success'
     )
   } catch (error: any) {
-    yield put(issueActions.updateIssueError(error))
+    yield put({
+      type: ISSUE_ACTION_TYPES.UPDATE_ISSUE + COMMON_ACTION_TYPES.ERROR,
+      error: error as string,
+    })
     const backendMessage =
       error?.response?.data?.message || error?.response?.data?.error || error?.message
     yield* dispatchAlert(
@@ -94,13 +104,19 @@ function* updateIssueSaga(action: { type: string; payload: UpdateIssuePayload })
 }
 
 // Delete issue saga
-function* deleteIssueSaga(action: { type: string; payload: number }) {
+function* deleteIssueSaga(action: { type: string; params: IssueParams }) {
   try {
-    yield call(issueService.deleteIssue, action.payload)
-    yield put(issueActions.deleteIssueSuccess(action.payload))
+    yield call(issueService.deleteIssue, action.params)
+    yield put({
+      type: ISSUE_ACTION_TYPES.DELETE_ISSUE + COMMON_ACTION_TYPES.SUCCESS,
+      data: action.params.id,
+    })
     yield* dispatchAlert(ISSUE_ACTION_TYPES.DELETE_ISSUE, 'Issue deleted successfully', 'success')
   } catch (error: any) {
-    yield put(issueActions.deleteIssueError(error))
+    yield put({
+      type: ISSUE_ACTION_TYPES.DELETE_ISSUE + COMMON_ACTION_TYPES.ERROR,
+      error: error as string,
+    })
     const backendMessage =
       error?.response?.data?.message || error?.response?.data?.error || error?.message
     yield* dispatchAlert(
@@ -114,48 +130,68 @@ function* deleteIssueSaga(action: { type: string; payload: number }) {
 // Fetch status counts saga
 function* fetchStatusCountsSaga() {
   try {
-    const response: AxiosResponse<ApiResponseDto<StatusCountsDto>> = yield call(
-      issueService.getStatusCounts
-    )
-    yield put(issueActions.fetchStatusCountsSuccess(response.data.data))
+    // @ts-expect-error-ignore
+    const response = yield call(issueService.getStatusCounts)
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_STATUS_COUNTS + COMMON_ACTION_TYPES.SUCCESS,
+      data: response.data.data,
+    })
   } catch (error: any) {
-    yield put(issueActions.fetchStatusCountsError(error))
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_STATUS_COUNTS + COMMON_ACTION_TYPES.ERROR,
+      error: error as string,
+    })
   }
 }
 
 // Fetch metadata saga
 function* fetchMetadataSaga() {
   try {
-    const response: AxiosResponse<ApiResponseDto<IssueMetadataDto>> = yield call(
-      issueService.getMetadata
-    )
-    yield put(issueActions.fetchMetadataSuccess(response.data.data))
+    // @ts-expect-error-ignore
+    const response = yield call(issueService.getMetadata)
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_METADATA + COMMON_ACTION_TYPES.SUCCESS,
+      data: response.data.data,
+    })
   } catch (error: any) {
-    yield put(issueActions.fetchMetadataError(error))
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_METADATA + COMMON_ACTION_TYPES.ERROR,
+      error: error as string,
+    })
   }
 }
 
-function* fetchMyIssuesSaga(action: { type: string; params?: IssueFiltersDto }) {
+// Fetch my issues saga
+function* fetchMyIssuesSaga(action: { type: string; params?: { filters?: IssueFiltersDto } }) {
   try {
-    const response: AxiosResponse<ApiResponseDto<Issue[]>> = yield call(
-      issueService.getMyIssues,
-      action.params
-    )
-    yield put(issueActions.fetchMyIssuesSuccess(response.data.data))
+    // @ts-expect-error-ignore
+    const response = yield call(issueService.getMyIssues, action.params?.filters)
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_MY_ISSUES + COMMON_ACTION_TYPES.SUCCESS,
+      data: response.data.data,
+    })
   } catch (error: any) {
-    yield put(issueActions.fetchMyIssuesError(error))
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_MY_ISSUES + COMMON_ACTION_TYPES.ERROR,
+      error: error as string,
+    })
   }
 }
 
 // Fetch my status counts saga
 function* fetchMyStatusCountsSaga() {
   try {
-    const response: AxiosResponse<ApiResponseDto<StatusCountsDto>> = yield call(
-      issueService.getMyStatusCounts
-    )
-    yield put(issueActions.fetchMyStatusCountsSuccess(response.data.data))
+    // @ts-expect-error-ignore
+    const response = yield call(issueService.getMyStatusCounts)
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_MY_STATUS_COUNTS + COMMON_ACTION_TYPES.SUCCESS,
+      data: response.data.data,
+    })
   } catch (error: any) {
-    yield put(issueActions.fetchMyStatusCountsError(error))
+    yield put({
+      type: ISSUE_ACTION_TYPES.FETCH_MY_STATUS_COUNTS + COMMON_ACTION_TYPES.ERROR,
+      error: error as string,
+    })
   }
 }
 

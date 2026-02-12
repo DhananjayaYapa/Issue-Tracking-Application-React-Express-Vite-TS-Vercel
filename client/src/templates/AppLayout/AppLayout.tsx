@@ -45,7 +45,6 @@ interface NavItem {
   label: string
   path: string
   icon: React.ReactNode
-  /** Roles allowed to see this nav item. If undefined, shown to all authenticated users. */
   allowedRoles?: string[]
 }
 

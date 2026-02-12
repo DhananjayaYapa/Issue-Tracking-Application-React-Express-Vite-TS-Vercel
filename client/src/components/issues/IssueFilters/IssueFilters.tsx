@@ -48,17 +48,22 @@ const IssueFilters: React.FC<IssueFiltersProps> = ({
   searchValue = '',
   onSearchChange,
 }) => {
-  const metadata = useSelector((state: RootState) => state.issues.metadata)
+  const { fetchMetadata } = useSelector((state: RootState) => state.issues)
+  const metadata = fetchMetadata.data
 
-  const statusOptions = (metadata?.statuses || Object.values(ISSUE_STATUS)).map((s) => ({
-    value: s,
-    label: s,
-  }))
+  const statusOptions = (metadata?.statuses || Object.values(ISSUE_STATUS))
+    .map((s: string) => ({
+      value: s,
+      label: s,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
 
-  const priorityOptions = (metadata?.priorities || Object.values(ISSUE_PRIORITY)).map((p) => ({
-    value: p,
-    label: p,
-  }))
+  const priorityOptions = (metadata?.priorities || Object.values(ISSUE_PRIORITY))
+    .map((p: string) => ({
+      value: p,
+      label: p,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
 
   const today = new Date().toISOString().split('T')[0]
 

@@ -7,6 +7,7 @@ const {
   badRequestResponse,
   unauthorizedResponse,
   notFoundResponse,
+  forbiddenResponse,
 } = require("../../shared/utils/responseHelper");
 const {
   ValidationError,
@@ -129,6 +130,14 @@ class AuthController {
   // Update authenticated user's profile
   static async updateProfile(req, res, next) {
     try {
+      // Check if user account is disabled
+      if (req.user.isEnabled === false) {
+        return forbiddenResponse(
+          res,
+          "Your account has been disabled. You cannot update your profile.",
+        );
+      }
+
       const userId = req.user.userId;
       const { name } = req.body;
 
@@ -155,6 +164,14 @@ class AuthController {
   // Change authenticated user's password
   static async changePassword(req, res, next) {
     try {
+      // Check if user account is disabled
+      if (req.user.isEnabled === false) {
+        return forbiddenResponse(
+          res,
+          "Your account has been disabled. You cannot change your password.",
+        );
+      }
+
       const userId = req.user.userId;
       const { currentPassword, newPassword } = req.body;
 
