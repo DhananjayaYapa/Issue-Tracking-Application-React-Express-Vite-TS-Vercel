@@ -64,7 +64,7 @@ class AuthController {
       const user = await AuthModel.findByEmail(email);
 
       if (!user) {
-        return unauthorizedResponse(res, "Invalid email or password");
+        return unauthorizedResponse(res, "User not found with this email");
       }
 
       const isPasswordValid = await bcrypt.compare(
@@ -73,7 +73,7 @@ class AuthController {
       );
 
       if (!isPasswordValid) {
-        return unauthorizedResponse(res, "Invalid email or password");
+        return unauthorizedResponse(res, "Invalid password");
       }
 
       // Generate JWT token
@@ -87,6 +87,7 @@ class AuthController {
             name: user.name,
             email: user.email,
             role: user.role,
+            isEnabled: user.is_enabled,
           },
           token,
         },
