@@ -1,171 +1,18 @@
-// // Load environment variables
-// require("dotenv").config();
-
-// const express = require("express");
-// const cors = require("cors");
-// const path = require("path");
-// const { testConnection, syncDatabase } = require("./config/db");
-// const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
-// const routes = require("./routes");
-
-// // Initialize Express app
-// const app = express();
-// const PORT = process.env.PORT || 5000;
-
-// // Enable CORS (Cross-Origin Resource Sharing)
-// app.use(
-//   cors({
-//     origin: process.env.CORS_ORIGIN || "*",
-//     credentials: true,
-//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   }),
-// );
-
-// // Parse JSON request bodies
-// app.use(express.json({ limit: "10mb" }));
-
-// // Parse URL-encoded request bodies
-// app.use(express.urlencoded({ extended: true }));
-
-// // Serve uploaded files statically
-// app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
-
-// // Request logging middleware (development only)
-// if (process.env.NODE_ENV !== "production") {
-//   app.use((req, res, next) => {
-//     const timestamp = new Date().toISOString();
-//     console.log(`[${timestamp}] ${req.method} ${req.path}`);
-//     next();
-//   });
-// }
-
-// // Mount all API routes
-// app.use("/api", routes);
-
-// // Root endpoint
-// app.get("/", (req, res) => {
-//   res.json({
-//     name: "Issue Tracker API",
-//     version: "1.0.0",
-//     description: "RESTful API for Issue Tracker with CRUD operations",
-//     endpoints: {
-//       health: "GET /api/health",
-//       auth: {
-//         register: "POST /api/auth/register",
-//         login: "POST /api/auth/login",
-//         profile: "GET /api/auth/profile",
-//       },
-//       issues: {
-//         list: "GET /api/issues (admin)",
-//         create: "POST /api/issues (user)",
-//         getById: "GET /api/issues/:id",
-//         update: "PUT /api/issues/:id",
-//         updateStatus: "PATCH /api/issues/:id/status (admin)",
-//         delete: "DELETE /api/issues/:id (admin)",
-//         myIssues: "GET /api/issues/my-issues (user)",
-//         statusCounts: "GET /api/issues/stats/counts (admin)",
-//         exportCSV: "GET /api/issues/export/csv (admin)",
-//         exportJSON: "GET /api/issues/export/json (admin)",
-//       },
-//       users: {
-//         list: "GET /api/users (admin)",
-//         getById: "GET /api/users/:id (admin)",
-//         delete: "DELETE /api/users/:id (admin)",
-//       },
-//     },
-//     documentation: "See README.md for full API documentation",
-//   });
-// });
-
-// // Handle 404 - Route not found
-// app.use(notFoundHandler);
-
-// // Global error handler
-// app.use(errorHandler);
-
-// //start server
-// const startServer = async () => {
-//   try {
-//     // Test database connection first
-//     const dbConnected = await testConnection();
-
-//     if (!dbConnected) {
-//       console.warn(
-//         "Database connection failed. Server will start but database operations may fail.",
-//       );
-//     } else {
-//       // Sync models to create/update tables
-//       await syncDatabase({ alter: true });
-//     }
-
-//     // Start the server
-//     app.listen(PORT, () => {
-//       console.log("\n" + "=".repeat(50));
-//       console.log("ISSUE TRACKER SERVER STARTED");
-//       console.log("=".repeat(50));
-//       console.log(`Server running on: http://localhost:${PORT}`);
-//       console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
-//       console.log(
-//         `Database: ${process.env.DB_HOST}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME}`,
-//       );
-//       console.log("=".repeat(50));
-//       console.log("\nAvailable endpoints:");
-//       console.log(`   GET  http://localhost:${PORT}/`);
-//       console.log(`   GET  http://localhost:${PORT}/api/health`);
-//       console.log(`   POST http://localhost:${PORT}/api/auth/register`);
-//       console.log(`   POST http://localhost:${PORT}/api/auth/login`);
-//       console.log(`   GET  http://localhost:${PORT}/api/issues`);
-//       console.log("=".repeat(50) + "\n");
-//     });
-//   } catch (error) {
-//     console.error("Failed to start server:", error.message);
-//     process.exit(1);
-//   }
-// };
-
-// // shutdown handling
-// process.on("SIGTERM", () => {
-//   console.log("\nSIGTERM signal received: closing HTTP server");
-//   process.exit(0);
-// });
-
-// process.on("SIGINT", () => {
-//   console.log("\nSIGINT signal received: closing HTTP server");
-//   process.exit(0);
-// });
-
-// // Handle uncaught exceptions
-// process.on("uncaughtException", (error) => {
-//   console.error("Uncaught Exception:", error);
-//   process.exit(1);
-// });
-
-// // Handle unhandled promise rejections
-// process.on("unhandledRejection", (reason, promise) => {
-//   console.error("Unhandled Rejection at:", promise, "reason:", reason);
-//   process.exit(1);
-// });
-
-// startServer();
-
-// module.exports = app;
-
-///////////////////////////////////////////////////////////////////////////////////////////
-
-// src/server.js
+// Load environment variables
 require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const { testConnection, syncDatabase } = require("./config/db");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
 const routes = require("./routes");
-const uploadRoute = require("./routes/upload"); // S3 upload route
 
+// Initialize Express app
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Enable CORS
+// Enable CORS (Cross-Origin Resource Sharing)
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "*",
@@ -177,7 +24,12 @@ app.use(
 
 // Parse JSON request bodies
 app.use(express.json({ limit: "10mb" }));
+
+// Parse URL-encoded request bodies
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
 // Request logging middleware (development only)
 if (process.env.NODE_ENV !== "production") {
@@ -188,9 +40,8 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-// Mount API routes
+// Mount all API routes
 app.use("/api", routes);
-app.use("/api", uploadRoute); // S3 upload: /api/file
 
 // Root endpoint
 app.get("/", (req, res) => {
@@ -227,33 +78,75 @@ app.get("/", (req, res) => {
   });
 });
 
-// 404 handler
+// Handle 404 - Route not found
 app.use(notFoundHandler);
 
 // Global error handler
 app.use(errorHandler);
 
-// Test database connection and sync tables
-const initDatabase = async () => {
+//start server
+const startServer = async () => {
   try {
+    // Test database connection first
     const dbConnected = await testConnection();
 
     if (!dbConnected) {
-      console.warn("Database connection failed. Some operations may not work.");
+      console.warn(
+        "Database connection failed. Server will start but database operations may fail.",
+      );
     } else {
+      // Sync models to create/update tables
       await syncDatabase({ alter: true });
     }
+
+    // Start the server
+    app.listen(PORT, () => {
+      console.log("\n" + "=".repeat(50));
+      console.log("ISSUE TRACKER SERVER STARTED");
+      console.log("=".repeat(50));
+      console.log(`Server running on: http://localhost:${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(
+        `Database: ${process.env.DB_HOST}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME}`,
+      );
+      console.log("=".repeat(50));
+      console.log("\nAvailable endpoints:");
+      console.log(`   GET  http://localhost:${PORT}/`);
+      console.log(`   GET  http://localhost:${PORT}/api/health`);
+      console.log(`   POST http://localhost:${PORT}/api/auth/register`);
+      console.log(`   POST http://localhost:${PORT}/api/auth/login`);
+      console.log(`   GET  http://localhost:${PORT}/api/issues`);
+      console.log("=".repeat(50) + "\n");
+    });
   } catch (error) {
-    console.error("Database initialization error:", error.message);
+    console.error("Failed to start server:", error.message);
+    process.exit(1);
   }
 };
 
-// For serverless: don't block on DB init during cold start
-// DB connection will be established on first request
-if (process.env.VERCEL) {
-  console.log("Running on Vercel - lazy DB initialization");
-} else {
-  initDatabase();
-}
+// shutdown handling
+process.on("SIGTERM", () => {
+  console.log("\nSIGTERM signal received: closing HTTP server");
+  process.exit(0);
+});
+
+process.on("SIGINT", () => {
+  console.log("\nSIGINT signal received: closing HTTP server");
+  process.exit(0);
+});
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
+
+startServer();
 
 module.exports = app;
