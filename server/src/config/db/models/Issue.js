@@ -57,15 +57,6 @@ const Issue = sequelize.define(
         key: "user_id",
       },
     },
-    assignedTo: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      field: "assigned_to",
-      references: {
-        model: "users",
-        key: "user_id",
-      },
-    },
     resolvedAt: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -86,7 +77,6 @@ const Issue = sequelize.define(
       { fields: ["status_id"] },
       { fields: ["priority_id"] },
       { fields: ["created_by"] },
-      { fields: ["assigned_to"] },
       { fields: ["created_at"] },
     ],
   },
