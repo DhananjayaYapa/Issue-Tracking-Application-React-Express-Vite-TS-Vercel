@@ -99,6 +99,12 @@ const startServer = async () => {
       await syncDatabase({ alter: true });
     }
 
+    // Skip listening when running on Vercel (serverless)
+    if (process.env.VERCEL) {
+      console.log("Running on Vercel - serverless mode");
+      return;
+    }
+
     // Start the server
     app.listen(PORT, () => {
       console.log("\n" + "=".repeat(50));
