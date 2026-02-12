@@ -153,7 +153,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-
 // src/server.js
 require("dotenv").config();
 
@@ -173,7 +172,7 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 // Parse JSON request bodies
@@ -240,9 +239,7 @@ const initDatabase = async () => {
     const dbConnected = await testConnection();
 
     if (!dbConnected) {
-      console.warn(
-        "Database connection failed. Some operations may not work."
-      );
+      console.warn("Database connection failed. Some operations may not work.");
     } else {
       await syncDatabase({ alter: true });
     }
@@ -251,7 +248,12 @@ const initDatabase = async () => {
   }
 };
 
-// Run DB init immediately
-initDatabase();
+// For serverless: don't block on DB init during cold start
+// DB connection will be established on first request
+if (process.env.VERCEL) {
+  console.log("Running on Vercel - lazy DB initialization");
+} else {
+  initDatabase();
+}
 
 module.exports = app;
