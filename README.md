@@ -187,13 +187,21 @@ git clone https://github.com/DhananjayaYapa/Issue-Tracking-Application-React-Exp
    cd client
    ```
 
-2. **Install dependencies:**
+2. **Configure environment:**
+
+   ```env
+   VITE_APP_ENV=local
+   VITE_API_BASE_URL=http://localhost:5000/api
+
+   ```
+
+3. **Install dependencies:**
 
    ```bash
    npm install
    ```
 
-3. **Start development server:**
+4. **Start development server:**
 
    ```bash
    npm run dev
