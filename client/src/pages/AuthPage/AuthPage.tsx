@@ -233,12 +233,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialPanel = 'login' }) => {
             <h1>Sign In</h1>
             <p>Welcome back! Please sign in to continue</p>
 
-            {error && !rightPanelActive && (
-              <Alert severity="error" className={styles.errorAlert}>
-                {error}
-              </Alert>
-            )}
-
             <form
               onSubmit={loginForm.handleSubmit(onLoginSubmit)}
               noValidate
@@ -267,8 +261,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialPanel = 'login' }) => {
                 type={showLoginPassword ? 'text' : 'password'}
                 margin="dense"
                 size="small"
-                error={!!loginForm.formState.errors.password}
-                helperText={loginForm.formState.errors.password?.message}
+                error={!!loginForm.formState.errors.password || (!!error && !rightPanelActive)}
+                helperText={
+                  loginForm.formState.errors.password?.message || (!rightPanelActive && error)
+                }
                 disabled={isLoading}
                 InputProps={{
                   endAdornment: (
