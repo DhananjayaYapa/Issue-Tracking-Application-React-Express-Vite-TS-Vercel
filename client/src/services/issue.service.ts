@@ -7,22 +7,24 @@ import type {
   ApiResponseDto,
   IssueMetadataDto,
   ExportFiltersDto,
+  UpdateIssueStatusDto,
+  IssueParams,
 } from '../utilities/models'
 import { axiosPrivateInstance } from './index'
 
-const getIssues = (params?: IssueFiltersDto) => {
-  return axiosPrivateInstance.get<ApiResponseDto<Issue[]>>(API_ROUTES.ISSUES, { params })
+const getIssues = (filters?: IssueFiltersDto) => {
+  return axiosPrivateInstance.get<ApiResponseDto<Issue[]>>(API_ROUTES.ISSUES, { params: filters })
 }
 
-const getIssue = (id: number) => {
-  return axiosPrivateInstance.get<ApiResponseDto<Issue>>(API_ROUTES.ISSUE_BY_ID(id))
+const getIssue = (params: IssueParams) => {
+  return axiosPrivateInstance.get<ApiResponseDto<Issue>>(API_ROUTES.ISSUE_BY_ID(params.id))
 }
 
 const createIssue = (payload: CreateIssuePayload) => {
   const formData = new FormData()
   formData.append('title', payload.title)
-  if (payload.description) formData.append('description', payload.description)
-  if (payload.priority) formData.append('priority', payload.priority)
+  formData.append('description', payload.description)
+  formData.append('priority', payload.priority)
   if (payload.status) formData.append('status', payload.status)
   if (payload.attachment) formData.append('attachment', payload.attachment)
   return axiosPrivateInstance.post<ApiResponseDto<Issue>>(API_ROUTES.ISSUES, formData, {
@@ -30,24 +32,30 @@ const createIssue = (payload: CreateIssuePayload) => {
   })
 }
 
-const updateIssue = (id: number, payload: Partial<CreateIssuePayload>) => {
+const updateIssue = (params: IssueParams, payload: Partial<CreateIssuePayload>) => {
   const formData = new FormData()
   if (payload.title !== undefined) formData.append('title', payload.title)
   if (payload.description !== undefined) formData.append('description', payload.description)
   if (payload.priority) formData.append('priority', payload.priority)
   if (payload.status) formData.append('status', payload.status)
   if (payload.attachment) formData.append('attachment', payload.attachment)
-  return axiosPrivateInstance.put<ApiResponseDto<Issue>>(API_ROUTES.ISSUE_BY_ID(id), formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+  return axiosPrivateInstance.put<ApiResponseDto<Issue>>(
+    API_ROUTES.ISSUE_BY_ID(params.id),
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }
+  )
+}
+
+const updateIssueStatus = (payload: UpdateIssueStatusDto) => {
+  return axiosPrivateInstance.patch<ApiResponseDto<Issue>>(API_ROUTES.ISSUE_STATUS(payload.id), {
+    status: payload.status,
   })
 }
 
-const updateIssueStatus = (id: number, status: string) => {
-  return axiosPrivateInstance.patch<ApiResponseDto<Issue>>(API_ROUTES.ISSUE_STATUS(id), { status })
-}
-
-const deleteIssue = (id: number) => {
-  return axiosPrivateInstance.delete(API_ROUTES.ISSUE_BY_ID(id))
+const deleteIssue = (params: IssueParams) => {
+  return axiosPrivateInstance.delete(API_ROUTES.ISSUE_BY_ID(params.id))
 }
 
 const getStatusCounts = () => {
@@ -58,8 +66,10 @@ const getMyStatusCounts = () => {
   return axiosPrivateInstance.get<ApiResponseDto<StatusCountsDto>>(API_ROUTES.MY_STATUS_COUNTS)
 }
 
-const getMyIssues = (params?: IssueFiltersDto) => {
-  return axiosPrivateInstance.get<ApiResponseDto<Issue[]>>(API_ROUTES.MY_ISSUES, { params })
+const getMyIssues = (filters?: IssueFiltersDto) => {
+  return axiosPrivateInstance.get<ApiResponseDto<Issue[]>>(API_ROUTES.MY_ISSUES, {
+    params: filters,
+  })
 }
 
 const exportCsv = (params?: ExportFiltersDto) => {

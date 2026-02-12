@@ -2,6 +2,7 @@ import {
   ISSUE_ACTION_TYPES,
   USER_ACTION_TYPES,
   EXPORT_ACTION_TYPES,
+  AUTH_ACTION_TYPES,
   COMMON_ACTION_TYPES,
 } from '../../utilities/constants'
 import type { AlertActionDto } from '../../utilities/models'
@@ -19,6 +20,8 @@ interface AlertReducerState {
   enableUserAlert: AlertState
   permanentDeleteUserAlert: AlertState
   downloadReportAlert: AlertState
+  updateProfileAlert: AlertState
+  changePasswordAlert: AlertState
 }
 
 const INITIAL_ALERT_STATE: AlertState = {
@@ -34,6 +37,8 @@ const INITIAL_STATE: AlertReducerState = {
   enableUserAlert: { ...INITIAL_ALERT_STATE },
   permanentDeleteUserAlert: { ...INITIAL_ALERT_STATE },
   downloadReportAlert: { ...INITIAL_ALERT_STATE },
+  updateProfileAlert: { ...INITIAL_ALERT_STATE },
+  changePasswordAlert: { ...INITIAL_ALERT_STATE },
 }
 
 const alertReducer = (state = INITIAL_STATE, action: AlertActionDto): AlertReducerState => {
@@ -141,6 +146,36 @@ const alertReducer = (state = INITIAL_STATE, action: AlertActionDto): AlertReduc
       return {
         ...state,
         downloadReportAlert: { ...INITIAL_ALERT_STATE },
+      }
+
+    // Update Profile
+    case AUTH_ACTION_TYPES.UPDATE_PROFILE + COMMON_ACTION_TYPES.SET_ALERT:
+      return {
+        ...state,
+        updateProfileAlert: {
+          message: action.message,
+          severity: action.severity,
+        },
+      }
+    case AUTH_ACTION_TYPES.UPDATE_PROFILE + COMMON_ACTION_TYPES.CLEAR_ALERT:
+      return {
+        ...state,
+        updateProfileAlert: { ...INITIAL_ALERT_STATE },
+      }
+
+    // Change Password
+    case AUTH_ACTION_TYPES.CHANGE_PASSWORD + COMMON_ACTION_TYPES.SET_ALERT:
+      return {
+        ...state,
+        changePasswordAlert: {
+          message: action.message,
+          severity: action.severity,
+        },
+      }
+    case AUTH_ACTION_TYPES.CHANGE_PASSWORD + COMMON_ACTION_TYPES.CLEAR_ALERT:
+      return {
+        ...state,
+        changePasswordAlert: { ...INITIAL_ALERT_STATE },
       }
 
     default:

@@ -1,24 +1,35 @@
 import { ISSUE_ACTION_TYPES, COMMON_ACTION_TYPES } from '../../utilities/constants'
 import type { Issue, StatusCountsDto, IssueMetadataDto } from '../../utilities/models'
 
-export interface IssueState {
-  issues: Issue[]
-  currentIssue: Issue | null
-  statusCounts: StatusCountsDto | null
-  myStatusCounts: StatusCountsDto | null
-  metadata: IssueMetadataDto | null
+// Nested state structure matching admin-react-poc pattern
+interface ActionState<T> {
   isLoading: boolean
+  data: T
   error: string | null
 }
 
+export interface IssueState {
+  fetchIssues: ActionState<Issue[]>
+  fetchIssue: ActionState<Issue | null>
+  createIssue: ActionState<Issue | null>
+  updateIssue: ActionState<Issue | null>
+  deleteIssue: ActionState<unknown>
+  fetchStatusCounts: ActionState<StatusCountsDto | null>
+  fetchMyStatusCounts: ActionState<StatusCountsDto | null>
+  fetchMetadata: ActionState<IssueMetadataDto | null>
+  fetchMyIssues: ActionState<Issue[]>
+}
+
 const INITIAL_STATE: IssueState = {
-  issues: [],
-  currentIssue: null,
-  statusCounts: null,
-  myStatusCounts: null,
-  metadata: null,
-  isLoading: false,
-  error: null,
+  fetchIssues: { isLoading: false, data: [], error: null },
+  fetchIssue: { isLoading: false, data: null, error: null },
+  createIssue: { isLoading: false, data: null, error: null },
+  updateIssue: { isLoading: false, data: null, error: null },
+  deleteIssue: { isLoading: false, data: null, error: null },
+  fetchStatusCounts: { isLoading: false, data: null, error: null },
+  fetchMyStatusCounts: { isLoading: false, data: null, error: null },
+  fetchMetadata: { isLoading: false, data: null, error: null },
+  fetchMyIssues: { isLoading: false, data: [], error: null },
 }
 
 // Issue Reducer
@@ -29,196 +40,182 @@ const issueReducer = (state = INITIAL_STATE, action: any): IssueState => {
     case ISSUE_ACTION_TYPES.FETCH_ISSUES + COMMON_ACTION_TYPES.REQUEST:
       return {
         ...state,
-        isLoading: true,
-        error: null,
+        fetchIssues: { ...state.fetchIssues, isLoading: true, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_ISSUES + COMMON_ACTION_TYPES.SUCCESS:
       return {
         ...state,
-        isLoading: false,
-        issues: action.data,
-        error: null,
+        fetchIssues: { isLoading: false, data: action.data, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_ISSUES + COMMON_ACTION_TYPES.ERROR:
       return {
         ...state,
-        isLoading: false,
-        error: action.error,
+        fetchIssues: { ...state.fetchIssues, isLoading: false, error: action.error },
       }
 
     // Fetch Single Issue
     case ISSUE_ACTION_TYPES.FETCH_ISSUE + COMMON_ACTION_TYPES.REQUEST:
       return {
         ...state,
-        isLoading: true,
-        error: null,
+        fetchIssue: { ...state.fetchIssue, isLoading: true, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_ISSUE + COMMON_ACTION_TYPES.SUCCESS:
       return {
         ...state,
-        isLoading: false,
-        currentIssue: action.data,
-        error: null,
+        fetchIssue: { isLoading: false, data: action.data, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_ISSUE + COMMON_ACTION_TYPES.ERROR:
       return {
         ...state,
-        isLoading: false,
-        error: action.error,
+        fetchIssue: { ...state.fetchIssue, isLoading: false, error: action.error },
       }
 
     // Create Issue
     case ISSUE_ACTION_TYPES.CREATE_ISSUE + COMMON_ACTION_TYPES.REQUEST:
       return {
         ...state,
-        isLoading: true,
-        error: null,
+        createIssue: { ...state.createIssue, isLoading: true, error: null },
       }
     case ISSUE_ACTION_TYPES.CREATE_ISSUE + COMMON_ACTION_TYPES.SUCCESS:
       return {
         ...state,
-        isLoading: false,
-        issues: [action.data, ...state.issues],
-        error: null,
+        createIssue: { isLoading: false, data: action.data, error: null },
+        fetchIssues: {
+          ...state.fetchIssues,
+          data: [action.data, ...state.fetchIssues.data],
+        },
       }
     case ISSUE_ACTION_TYPES.CREATE_ISSUE + COMMON_ACTION_TYPES.ERROR:
       return {
         ...state,
-        isLoading: false,
-        error: action.error,
+        createIssue: { ...state.createIssue, isLoading: false, error: action.error },
       }
 
     // Update Issue
     case ISSUE_ACTION_TYPES.UPDATE_ISSUE + COMMON_ACTION_TYPES.REQUEST:
       return {
         ...state,
-        isLoading: true,
-        error: null,
+        updateIssue: { ...state.updateIssue, isLoading: true, error: null },
       }
     case ISSUE_ACTION_TYPES.UPDATE_ISSUE + COMMON_ACTION_TYPES.SUCCESS:
       return {
         ...state,
-        isLoading: false,
-        issues: state.issues.map((issue) => (issue.id === action.data.id ? action.data : issue)),
-        currentIssue: state.currentIssue?.id === action.data.id ? action.data : state.currentIssue,
-        error: null,
+        updateIssue: { isLoading: false, data: action.data, error: null },
+        fetchIssues: {
+          ...state.fetchIssues,
+          data: state.fetchIssues.data.map((issue) =>
+            issue.id === action.data.id ? action.data : issue
+          ),
+        },
+        fetchIssue: {
+          ...state.fetchIssue,
+          data: state.fetchIssue.data?.id === action.data.id ? action.data : state.fetchIssue.data,
+        },
       }
     case ISSUE_ACTION_TYPES.UPDATE_ISSUE + COMMON_ACTION_TYPES.ERROR:
       return {
         ...state,
-        isLoading: false,
-        error: action.error,
+        updateIssue: { ...state.updateIssue, isLoading: false, error: action.error },
       }
 
     // Delete Issue
     case ISSUE_ACTION_TYPES.DELETE_ISSUE + COMMON_ACTION_TYPES.REQUEST:
       return {
         ...state,
-        isLoading: true,
-        error: null,
+        deleteIssue: { ...state.deleteIssue, isLoading: true, error: null },
       }
     case ISSUE_ACTION_TYPES.DELETE_ISSUE + COMMON_ACTION_TYPES.SUCCESS:
       return {
         ...state,
-        isLoading: false,
-        issues: state.issues.filter((issue) => issue.id !== action.data),
-        error: null,
+        deleteIssue: { isLoading: false, data: action.data, error: null },
+        fetchIssues: {
+          ...state.fetchIssues,
+          data: state.fetchIssues.data.filter((issue) => issue.id !== action.data),
+        },
       }
     case ISSUE_ACTION_TYPES.DELETE_ISSUE + COMMON_ACTION_TYPES.ERROR:
       return {
         ...state,
-        isLoading: false,
-        error: action.error,
+        deleteIssue: { ...state.deleteIssue, isLoading: false, error: action.error },
       }
 
     // Fetch Status Counts
     case ISSUE_ACTION_TYPES.FETCH_STATUS_COUNTS + COMMON_ACTION_TYPES.REQUEST:
       return {
         ...state,
-        isLoading: true,
-        error: null,
+        fetchStatusCounts: { ...state.fetchStatusCounts, isLoading: true, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_STATUS_COUNTS + COMMON_ACTION_TYPES.SUCCESS:
       return {
         ...state,
-        isLoading: false,
-        statusCounts: action.data,
-        error: null,
+        fetchStatusCounts: { isLoading: false, data: action.data, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_STATUS_COUNTS + COMMON_ACTION_TYPES.ERROR:
       return {
         ...state,
-        isLoading: false,
-        error: action.error,
+        fetchStatusCounts: { ...state.fetchStatusCounts, isLoading: false, error: action.error },
       }
 
     // Fetch Metadata
     case ISSUE_ACTION_TYPES.FETCH_METADATA + COMMON_ACTION_TYPES.REQUEST:
       return {
         ...state,
-        error: null,
+        fetchMetadata: { ...state.fetchMetadata, isLoading: true, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_METADATA + COMMON_ACTION_TYPES.SUCCESS:
       return {
         ...state,
-        metadata: action.data,
-        error: null,
+        fetchMetadata: { isLoading: false, data: action.data, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_METADATA + COMMON_ACTION_TYPES.ERROR:
       return {
         ...state,
-        error: action.error,
+        fetchMetadata: { ...state.fetchMetadata, isLoading: false, error: action.error },
       }
+
+    // Fetch My Issues
     case ISSUE_ACTION_TYPES.FETCH_MY_ISSUES + COMMON_ACTION_TYPES.REQUEST:
       return {
         ...state,
-        isLoading: true,
-        error: null,
+        fetchMyIssues: { ...state.fetchMyIssues, isLoading: true, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_MY_ISSUES + COMMON_ACTION_TYPES.SUCCESS:
       return {
         ...state,
-        isLoading: false,
-        issues: action.data,
-        error: null,
+        fetchMyIssues: { isLoading: false, data: action.data, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_MY_ISSUES + COMMON_ACTION_TYPES.ERROR:
       return {
         ...state,
-        isLoading: false,
-        error: action.error,
-      }
-
-    // Clear Current Issue
-    case ISSUE_ACTION_TYPES.CLEAR_CURRENT_ISSUE:
-      return {
-        ...state,
-        currentIssue: null,
+        fetchMyIssues: { ...state.fetchMyIssues, isLoading: false, error: action.error },
       }
 
     // Fetch My Status Counts
     case ISSUE_ACTION_TYPES.FETCH_MY_STATUS_COUNTS + COMMON_ACTION_TYPES.REQUEST:
       return {
         ...state,
-        error: null,
+        fetchMyStatusCounts: { ...state.fetchMyStatusCounts, isLoading: true, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_MY_STATUS_COUNTS + COMMON_ACTION_TYPES.SUCCESS:
       return {
         ...state,
-        myStatusCounts: action.data,
-        error: null,
+        fetchMyStatusCounts: { isLoading: false, data: action.data, error: null },
       }
     case ISSUE_ACTION_TYPES.FETCH_MY_STATUS_COUNTS + COMMON_ACTION_TYPES.ERROR:
       return {
         ...state,
-        error: action.error,
+        fetchMyStatusCounts: {
+          ...state.fetchMyStatusCounts,
+          isLoading: false,
+          error: action.error,
+        },
       }
 
-    // Clear Error
-    case ISSUE_ACTION_TYPES.CLEAR_ERROR:
+    // Clear Current Issue
+    case ISSUE_ACTION_TYPES.CLEAR_CURRENT_ISSUE:
       return {
         ...state,
-        error: null,
+        fetchIssue: { ...state.fetchIssue, data: null },
       }
 
     default:
