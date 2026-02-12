@@ -60,7 +60,6 @@
 
 // module.exports = { upload, UPLOAD_DIR };
 
-
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const path = require("path");
@@ -88,9 +87,9 @@ const fileFilter = (req, file, cb) => {
   } else {
     cb(
       new Error(
-        "Invalid file type. Allowed: JPEG, PNG, GIF, WebP, PDF, DOC, DOCX, XLS, XLSX, TXT, CSV"
+        "Invalid file type. Allowed: JPEG, PNG, GIF, WebP, PDF, DOC, DOCX, XLS, XLSX, TXT, CSV",
       ),
-      false
+      false,
     );
   }
 };
@@ -110,10 +109,9 @@ if (s3 && process.env.AWS_BUCKET_NAME) {
       key: (req, file, cb) => {
         const timestamp = Date.now().toString();
         const ext = path.extname(file.originalname);
-        const baseName = path.basename(file.originalname, ext).replace(
-          /[^a-zA-Z0-9_-]/g,
-          "_"
-        );
+        const baseName = path
+          .basename(file.originalname, ext)
+          .replace(/[^a-zA-Z0-9_-]/g, "_");
         cb(null, `${timestamp}-${baseName}${ext}`);
       },
     }),
