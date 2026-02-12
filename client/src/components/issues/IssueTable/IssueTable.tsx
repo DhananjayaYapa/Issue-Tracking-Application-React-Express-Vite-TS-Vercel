@@ -237,11 +237,14 @@ const IssueTable: React.FC<IssueTableProps> = ({
                           }}
                           sx={{ minWidth: 140 }}
                         >
-                          {Object.values(ISSUE_STATUS).map((s) => (
-                            <MenuItem key={s} value={s}>
-                              {s}
-                            </MenuItem>
-                          ))}
+                          {Object.values(ISSUE_STATUS)
+                            .slice()
+                            .sort((a, b) => a.localeCompare(b))
+                            .map((s) => (
+                              <MenuItem key={s} value={s}>
+                                {s}
+                              </MenuItem>
+                            ))}
                         </Select>
                       ) : showStatusIcons ? (
                         <Tooltip title={issue.status}>

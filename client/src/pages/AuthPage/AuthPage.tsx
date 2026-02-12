@@ -79,6 +79,26 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialPanel = 'login' }) => {
     navigate(showRegister ? APP_ROUTES.REGISTER : APP_ROUTES.LOGIN, { replace: true })
   }
 
+  const handleSwitchToRegister = () => {
+    handleSwitchPanel(true)
+  }
+
+  const handleSwitchToLogin = () => {
+    handleSwitchPanel(false)
+  }
+
+  const handleToggleRegPassword = () => {
+    setShowRegPassword(!showRegPassword)
+  }
+
+  const handleToggleRegConfirmPassword = () => {
+    setShowRegConfirmPassword(!showRegConfirmPassword)
+  }
+
+  const handleToggleLoginPassword = () => {
+    setShowLoginPassword(!showLoginPassword)
+  }
+
   const onLoginSubmit = (data: LoginPayload) => {
     dispatch(authActions.loginRequest(data))
   }
@@ -152,11 +172,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialPanel = 'login' }) => {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowRegPassword(!showRegPassword)}
-                        edge="end"
-                        size="small"
-                      >
+                      <IconButton onClick={handleToggleRegPassword} edge="end" size="small">
                         {showRegPassword ? (
                           <VisibilityOff fontSize="small" />
                         ) : (
@@ -183,11 +199,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialPanel = 'login' }) => {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                        edge="end"
-                        size="small"
-                      >
+                      <IconButton onClick={handleToggleRegConfirmPassword} edge="end" size="small">
                         {showRegConfirmPassword ? (
                           <VisibilityOff fontSize="small" />
                         ) : (
@@ -212,7 +224,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialPanel = 'login' }) => {
               </Button>
             </form>
             <div className={styles.mobileToggle}>
-              Already have an account? <a onClick={() => handleSwitchPanel(false)}>Sign In</a>
+              Already have an account? <a onClick={handleSwitchToLogin}>Sign In</a>
             </div>
           </div>
         </div>
@@ -261,11 +273,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialPanel = 'login' }) => {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowLoginPassword(!showLoginPassword)}
-                        edge="end"
-                        size="small"
-                      >
+                      <IconButton onClick={handleToggleLoginPassword} edge="end" size="small">
                         {showLoginPassword ? (
                           <VisibilityOff fontSize="small" />
                         ) : (
@@ -290,7 +298,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialPanel = 'login' }) => {
               </Button>
             </form>
             <div className={styles.mobileToggle}>
-              Don't have an account? <a onClick={() => handleSwitchPanel(true)}>Sign Up</a>
+              Don't have an account? <a onClick={handleSwitchToRegister}>Sign Up</a>
             </div>
           </div>
         </div>
@@ -299,14 +307,14 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialPanel = 'login' }) => {
             <div className={`${styles.overlayPanel} ${styles.overlayLeft}`}>
               <h1>Welcome Back!</h1>
               <p>To keep connected with us please login with your personal info</p>
-              <button className={styles.ghostButton} onClick={() => handleSwitchPanel(false)}>
+              <button className={styles.ghostButton} onClick={handleSwitchToLogin}>
                 Sign In
               </button>
             </div>
             <div className={`${styles.overlayPanel} ${styles.overlayRight}`}>
               <h1>Hello, User!</h1>
               <p>Enter your personal details to start</p>
-              <button className={styles.ghostButton} onClick={() => handleSwitchPanel(true)}>
+              <button className={styles.ghostButton} onClick={handleSwitchToRegister}>
                 Sign Up
               </button>
             </div>

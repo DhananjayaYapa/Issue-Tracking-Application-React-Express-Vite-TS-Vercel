@@ -23,23 +23,31 @@ import styles from './Dashboard.module.scss'
 const Dashboard: React.FC = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const { statusCounts, myStatusCounts, issues, isLoading } = useSelector(
-    (state: RootState) => state.issues
-  )
+  const issueState = useSelector((state: RootState) => state.issues)
   const user = useSelector((state: RootState) => state.auth.user)
 
   const isAdmin = user?.role === 'admin'
+  const statusCounts = issueState.fetchStatusCounts.data
+  const myStatusCounts = issueState.fetchMyStatusCounts.data
+  const issues = isAdmin ? issueState.fetchIssues.data : issueState.fetchMyIssues.data
+  const isLoading = isAdmin
+    ? issueState.fetchStatusCounts.isLoading || issueState.fetchIssues.isLoading
+    : issueState.fetchMyStatusCounts.isLoading || issueState.fetchMyIssues.isLoading
   const counts = isAdmin ? statusCounts : myStatusCounts
 
   useEffect(() => {
     if (isAdmin) {
-      dispatch(issueActions.fetchStatusCountsRequest())
-      dispatch(issueActions.fetchIssuesRequest({}))
+      dispatch(issueActions.fetchStatusCounts())
+      dispatch(issueActions.fetchIssues())
     } else {
-      dispatch(issueActions.fetchMyStatusCountsRequest())
-      dispatch(issueActions.fetchMyIssuesRequest())
+      dispatch(issueActions.fetchMyStatusCounts())
+      dispatch(issueActions.fetchMyIssues())
     }
   }, [dispatch, isAdmin])
+
+  const handleViewDetails = () => {
+    navigate(isAdmin ? APP_ROUTES.ISSUES : APP_ROUTES.MY_ISSUES)
+  }
 
   const stats = [
     {
@@ -93,11 +101,7 @@ const Dashboard: React.FC = () => {
                 {counts?.total || 0}
               </Typography>
             </Box>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => navigate(isAdmin ? APP_ROUTES.ISSUES : APP_ROUTES.MY_ISSUES)}
-            >
+            <Button variant="contained" size="large" onClick={handleViewDetails}>
               View Details
             </Button>
           </CardContent>

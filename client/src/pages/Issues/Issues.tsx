@@ -16,34 +16,33 @@ import styles from './Issues.module.scss'
 import { APP_TABLE_CONFIG } from '../../utilities/constants'
 import { paginationSx } from '../../assets/theme/theme'
 
+const INITIAL_STATUS_CHANGE_STATE: { issueId: number; status: IssueStatus } | null = null
+const INITIAL_FILTERS_STATE: IssueFiltersType = {}
+
 const Issues: React.FC = () => {
   const dispatch = useDispatch()
 
-  const { issues, isLoading, error } = useSelector((state: RootState) => state.issues)
+  const issueState = useSelector((state: RootState) => state.issues)
+  const { data: issues, isLoading, error } = issueState.fetchIssues
   const updateIssueAlert = useSelector((state: RootState) => state.alert.updateIssueAlert)
   const deleteIssueAlert = useSelector((state: RootState) => state.alert.deleteIssueAlert)
 
-  const [pendingFilters, setPendingFilters] = useState<IssueFiltersType>({})
+  const [pendingFilters, setPendingFilters] = useState(INITIAL_FILTERS_STATE)
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
   const [createdByValue, setCreatedByValue] = useState('')
-  const [appliedFilters, setAppliedFilters] = useState<IssueFiltersType>({})
+  const [appliedFilters, setAppliedFilters] = useState(INITIAL_FILTERS_STATE)
   const [users, setUsers] = useState<User[]>([])
-
   const [editingStatusId, setEditingStatusId] = useState<number | null>(null)
-
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteIssueId, setDeleteIssueId] = useState<number | null>(null)
-
   const [statusDialogOpen, setStatusDialogOpen] = useState(false)
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     issueId: number
     status: IssueStatus
-  } | null>(null)
-
+  } | null>(INITIAL_STATUS_CHANGE_STATE)
   const [showStatusIcons, setShowStatusIcons] = useState(false)
   const [showPriorityIcons, setShowPriorityIcons] = useState(false)
-
   const [viewIssue, setViewIssue] = useState<Issue | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [rowsPerPage, setRowsPerPage] = useState(10)
@@ -65,17 +64,19 @@ const Issues: React.FC = () => {
   const paginatedData = filteredIssues.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
   useEffect(() => {
-    dispatch(issueActions.fetchIssuesRequest(appliedFilters))
-    dispatch(issueActions.fetchMetadataRequest())
+    dispatch(issueActions.fetchIssues({ filters: appliedFilters }))
+    dispatch(issueActions.fetchMetadata())
     userService.getUsers().then((res) => {
       setUsers(res.data.data || [])
     })
   }, [dispatch, appliedFilters])
 
-  const userOptions = users.map((u) => ({
-    value: String(u.userId),
-    label: u.name,
-  }))
+  const userOptions = users
+    .map((u) => ({
+      value: String(u.userId),
+      label: u.name,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
 
   const handleApplyFilters = () => {
     setAppliedFilters({
@@ -87,11 +88,11 @@ const Issues: React.FC = () => {
   }
 
   const handleResetFilters = () => {
-    setPendingFilters({})
+    setPendingFilters(INITIAL_FILTERS_STATE)
     setFromDate('')
     setToDate('')
     setCreatedByValue('')
-    setAppliedFilters({})
+    setAppliedFilters(INITIAL_FILTERS_STATE)
     setSearchInput('')
   }
 
@@ -114,23 +115,23 @@ const Issues: React.FC = () => {
   const handleConfirmStatusChange = () => {
     if (pendingStatusChange) {
       dispatch(
-        issueActions.updateIssueRequest({
+        issueActions.updateIssue({
           id: pendingStatusChange.issueId,
           status: pendingStatusChange.status,
         })
       )
       setEditingStatusId(null)
       setTimeout(() => {
-        dispatch(issueActions.fetchIssuesRequest(appliedFilters))
+        dispatch(issueActions.fetchIssues({ filters: appliedFilters }))
       }, 500)
     }
     setStatusDialogOpen(false)
-    setPendingStatusChange(null)
+    setPendingStatusChange(INITIAL_STATUS_CHANGE_STATE)
   }
 
   const handleCancelStatusChange = () => {
     setStatusDialogOpen(false)
-    setPendingStatusChange(null)
+    setPendingStatusChange(INITIAL_STATUS_CHANGE_STATE)
   }
 
   const handleOpenDelete = (id: number) => {
@@ -145,12 +146,45 @@ const Issues: React.FC = () => {
 
   const handleConfirmDelete = () => {
     if (deleteIssueId) {
-      dispatch(issueActions.deleteIssueRequest(deleteIssueId))
+      dispatch(issueActions.deleteIssue({ id: deleteIssueId }))
       setTimeout(() => {
-        dispatch(issueActions.fetchIssuesRequest(appliedFilters))
+        dispatch(issueActions.fetchIssues({ filters: appliedFilters }))
       }, 500)
     }
     handleCloseDelete()
+  }
+
+  const handleViewIssue = (issue: Issue) => {
+    setViewIssue(issue)
+  }
+
+  const handleCloseViewDialog = () => {
+    setViewIssue(null)
+  }
+
+  const handleToggleStatusIcons = () => {
+    setShowStatusIcons(!showStatusIcons)
+  }
+
+  const handleTogglePriorityIcons = () => {
+    setShowPriorityIcons(!showPriorityIcons)
+  }
+
+  const handlePageChange = (_: unknown, newPage: number) => {
+    setPage(newPage)
+  }
+
+  const handleRowsPerPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(e.target.value, 10))
+    setPage(0)
+  }
+
+  const handleClearUpdateIssueAlert = () => {
+    dispatch(alertActions.clearUpdateIssueAlert())
+  }
+
+  const handleClearDeleteIssueAlert = () => {
+    dispatch(alertActions.clearDeleteIssueAlert())
   }
 
   return (
@@ -158,7 +192,7 @@ const Issues: React.FC = () => {
       {updateIssueAlert?.message && (
         <Alert
           severity={updateIssueAlert.severity ?? 'info'}
-          onClose={() => dispatch(alertActions.clearUpdateIssueAlert())}
+          onClose={handleClearUpdateIssueAlert}
           sx={{ mb: 2 }}
         >
           {updateIssueAlert.message}
@@ -168,7 +202,7 @@ const Issues: React.FC = () => {
       {deleteIssueAlert?.message && (
         <Alert
           severity={deleteIssueAlert.severity ?? 'info'}
-          onClose={() => dispatch(alertActions.clearDeleteIssueAlert())}
+          onClose={handleClearDeleteIssueAlert}
           sx={{ mb: 2 }}
         >
           {deleteIssueAlert.message}
@@ -204,27 +238,24 @@ const Issues: React.FC = () => {
         loading={isLoading}
         onEdit={() => {}}
         onDelete={handleOpenDelete}
-        onView={(issue) => setViewIssue(issue)}
+        onView={handleViewIssue}
         onStatusChange={handleStatusChange}
         editingStatusId={editingStatusId}
         onEditStatusToggle={handleEditStatusToggle}
         showActions={true}
         showStatusIcons={showStatusIcons}
         showPriorityIcons={showPriorityIcons}
-        onToggleStatusIcons={() => setShowStatusIcons(!showStatusIcons)}
-        onTogglePriorityIcons={() => setShowPriorityIcons(!showPriorityIcons)}
+        onToggleStatusIcons={handleToggleStatusIcons}
+        onTogglePriorityIcons={handleTogglePriorityIcons}
       >
         {filteredIssues.length > 0 && (
           <TablePagination
             component="div"
             count={filteredIssues.length}
             page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
+            onPageChange={handlePageChange}
             rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10))
-              setPage(0)
-            }}
+            onRowsPerPageChange={handleRowsPerPageChange}
             rowsPerPageOptions={APP_TABLE_CONFIG.ITEMS_PER_PAGE_OPTION}
             sx={paginationSx}
           />
@@ -251,7 +282,7 @@ const Issues: React.FC = () => {
         onCancel={handleCancelStatusChange}
       />
 
-      <IssueDetailDialog open={!!viewIssue} onClose={() => setViewIssue(null)} issue={viewIssue} />
+      <IssueDetailDialog open={!!viewIssue} onClose={handleCloseViewDialog} issue={viewIssue} />
     </Box>
   )
 }

@@ -33,3 +33,17 @@ export interface AuthResponseDto {
   user: User
   token: string
 }
+
+export interface PasswordFormField {
+  value: string
+  validator: string
+  isRequired: boolean
+  minLength?: number
+  error: string | null
+}
+
+export interface PasswordFormData {
+  currentPassword: PasswordFormField
+  newPassword: PasswordFormField
+  confirmPassword: PasswordFormField
+}

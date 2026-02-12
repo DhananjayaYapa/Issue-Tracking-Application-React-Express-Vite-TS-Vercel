@@ -33,9 +33,17 @@ import { formatDate } from '../../utilities/helpers/commonFunctions'
 import { APP_TABLE_CONFIG } from '../../utilities/constants'
 import { paginationSx, StyledTableCell, StyledTableRow } from '../../assets/theme/theme'
 
+const INITIAL_DELETE_CONFIRM_STATE = {
+  open: false,
+  userId: null as number | null,
+  userName: '',
+  actionType: 'disable' as 'disable' | 'enable' | 'permanent',
+}
+
 const Users: React.FC = () => {
   const dispatch = useDispatch()
-  const { users, isLoading, error } = useSelector((state: RootState) => state.users)
+  const { fetchUsers } = useSelector((state: RootState) => state.users)
+  const { data: users, isLoading, error } = fetchUsers
   const currentUser = useSelector((state: RootState) => state.auth.user)
   const deleteUserAlert = useSelector((state: RootState) => state.alert.deleteUserAlert)
   const enableUserAlert = useSelector((state: RootState) => state.alert.enableUserAlert)
@@ -43,17 +51,7 @@ const Users: React.FC = () => {
     (state: RootState) => state.alert.permanentDeleteUserAlert
   )
 
-  const [deleteConfirm, setDeleteConfirm] = useState<{
-    open: boolean
-    userId: number | null
-    userName: string
-    actionType: 'disable' | 'enable' | 'permanent'
-  }>({
-    open: false,
-    userId: null,
-    userName: '',
-    actionType: 'disable',
-  })
+  const [deleteConfirm, setDeleteConfirm] = useState(INITIAL_DELETE_CONFIRM_STATE)
   const [searchInput, setSearchInput] = useState('')
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [page, setPage] = useState(0)
@@ -70,39 +68,87 @@ const Users: React.FC = () => {
   })
 
   useEffect(() => {
-    dispatch(userActions.fetchUsersRequest())
+    dispatch(userActions.fetchUsers())
   }, [dispatch])
 
   const handleDisableClick = (userId: number, userName: string) => {
-    setDeleteConfirm({ open: true, userId, userName, actionType: 'disable' })
+    setDeleteConfirm((prev) => ({ ...prev, open: true, userId, userName, actionType: 'disable' }))
   }
 
   const handleEnableClick = (userId: number, userName: string) => {
-    setDeleteConfirm({ open: true, userId, userName, actionType: 'enable' })
+    setDeleteConfirm((prev) => ({ ...prev, open: true, userId, userName, actionType: 'enable' }))
   }
 
   const handlePermanentDeleteClick = (userId: number, userName: string) => {
-    setDeleteConfirm({ open: true, userId, userName, actionType: 'permanent' })
+    setDeleteConfirm((prev) => ({ ...prev, open: true, userId, userName, actionType: 'permanent' }))
   }
 
   const handleConfirm = () => {
     if (deleteConfirm.userId) {
       if (deleteConfirm.actionType === 'permanent') {
-        dispatch(userActions.permanentDeleteUserRequest(deleteConfirm.userId))
+        dispatch(userActions.permanentDeleteUser({ id: deleteConfirm.userId }))
       } else if (deleteConfirm.actionType === 'enable') {
-        dispatch(userActions.enableUserRequest(deleteConfirm.userId))
+        dispatch(userActions.enableUser({ id: deleteConfirm.userId }))
       } else {
-        dispatch(userActions.deleteUserRequest(deleteConfirm.userId))
+        dispatch(userActions.deleteUser({ id: deleteConfirm.userId }))
       }
     }
-    setDeleteConfirm({ open: false, userId: null, userName: '', actionType: 'disable' })
+    setDeleteConfirm(INITIAL_DELETE_CONFIRM_STATE)
   }
 
   const handleCancel = () => {
-    setDeleteConfirm({ open: false, userId: null, userName: '', actionType: 'disable' })
+    setDeleteConfirm(INITIAL_DELETE_CONFIRM_STATE)
+  }
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value)
+  }
+
+  const handlePageChange = (_: unknown, newPage: number) => {
+    setPage(newPage)
+  }
+
+  const handleRowsPerPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(e.target.value, 10))
+    setPage(0)
+  }
+
+  const handleClearDeleteUserAlert = () => {
+    dispatch(alertActions.clearDeleteUserAlert())
+  }
+
+  const handleClearEnableUserAlert = () => {
+    dispatch(alertActions.clearEnableUserAlert())
+  }
+
+  const handleClearPermanentDeleteUserAlert = () => {
+    dispatch(alertActions.clearPermanentDeleteUserAlert())
   }
 
   const paginatedData = filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
+  const getConfirmDialogContent = () => {
+    const { actionType, userName } = deleteConfirm
+    switch (actionType) {
+      case 'permanent':
+        return {
+          title: 'Permanently Delete User',
+          message: `Are you sure you want to permanently delete "${userName}"? This will also delete all issues created by this user. This action cannot be undone.`,
+        }
+      case 'enable':
+        return {
+          title: 'Enable User',
+          message: `Are you sure you want to enable "${userName}"? The user will be able to access the system again.`,
+        }
+      default:
+        return {
+          title: 'Disable User',
+          message: `Are you sure you want to disable "${userName}"? The user will no longer be able to access the system.`,
+        }
+    }
+  }
+
+  const confirmDialogContent = getConfirmDialogContent()
 
   return (
     <Box>
@@ -119,7 +165,7 @@ const Users: React.FC = () => {
               variant="outlined"
               placeholder="Search users..."
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={handleSearchChange}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -135,7 +181,7 @@ const Users: React.FC = () => {
         {deleteUserAlert?.message && (
           <Alert
             severity={deleteUserAlert.severity ?? 'info'}
-            onClose={() => dispatch(alertActions.clearDeleteUserAlert())}
+            onClose={handleClearDeleteUserAlert}
             sx={{ mb: 2 }}
           >
             {deleteUserAlert.message}
@@ -145,7 +191,7 @@ const Users: React.FC = () => {
         {enableUserAlert?.message && (
           <Alert
             severity={enableUserAlert.severity ?? 'info'}
-            onClose={() => dispatch(alertActions.clearEnableUserAlert())}
+            onClose={handleClearEnableUserAlert}
             sx={{ mb: 2 }}
           >
             {enableUserAlert.message}
@@ -155,7 +201,7 @@ const Users: React.FC = () => {
         {permanentDeleteUserAlert?.message && (
           <Alert
             severity={permanentDeleteUserAlert.severity ?? 'info'}
-            onClose={() => dispatch(alertActions.clearPermanentDeleteUserAlert())}
+            onClose={handleClearPermanentDeleteUserAlert}
             sx={{ mb: 2 }}
           >
             {permanentDeleteUserAlert.message}
@@ -287,12 +333,9 @@ const Users: React.FC = () => {
             component="div"
             count={filteredUsers.length}
             page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
+            onPageChange={handlePageChange}
             rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10))
-              setPage(0)
-            }}
+            onRowsPerPageChange={handleRowsPerPageChange}
             rowsPerPageOptions={APP_TABLE_CONFIG.ITEMS_PER_PAGE_OPTION}
             sx={paginationSx}
           />
@@ -301,20 +344,8 @@ const Users: React.FC = () => {
 
       <ConfirmationDialog
         open={deleteConfirm.open}
-        title={
-          deleteConfirm.actionType === 'permanent'
-            ? 'Permanently Delete User'
-            : deleteConfirm.actionType === 'enable'
-              ? 'Enable User'
-              : 'Disable User'
-        }
-        message={
-          deleteConfirm.actionType === 'permanent'
-            ? `Are you sure you want to permanently delete "${deleteConfirm.userName}"? This will also delete all issues created by this user. This action cannot be undone.`
-            : deleteConfirm.actionType === 'enable'
-              ? `Are you sure you want to enable "${deleteConfirm.userName}"? The user will be able to access the system again.`
-              : `Are you sure you want to disable "${deleteConfirm.userName}"? The user will no longer be able to access the system.`
-        }
+        title={confirmDialogContent.title}
+        message={confirmDialogContent.message}
         onConfirm={handleConfirm}
         onCancel={handleCancel}
       />

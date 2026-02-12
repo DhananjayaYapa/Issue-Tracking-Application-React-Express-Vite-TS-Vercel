@@ -1,105 +1,39 @@
 import { USER_ACTION_TYPES, COMMON_ACTION_TYPES } from '../../utilities/constants'
-import type { User } from '../../utilities/models'
+import type { UserParams } from '../../utilities/models'
 
 // Fetch all users
-const fetchUsersRequest = () => ({
+const fetchUsers = () => ({
   type: USER_ACTION_TYPES.FETCH_USERS + COMMON_ACTION_TYPES.REQUEST,
 })
 
-const fetchUsersSuccess = (data: User[]) => ({
-  type: USER_ACTION_TYPES.FETCH_USERS + COMMON_ACTION_TYPES.SUCCESS,
-  data,
-})
-
-const fetchUsersError = (error: string) => ({
-  type: USER_ACTION_TYPES.FETCH_USERS + COMMON_ACTION_TYPES.ERROR,
-  error,
-})
-
 // Fetch single user
-const fetchUserRequest = (id: number) => ({
+const fetchUser = (params: UserParams) => ({
   type: USER_ACTION_TYPES.FETCH_USER + COMMON_ACTION_TYPES.REQUEST,
-  payload: id,
-})
-
-const fetchUserSuccess = (data: User) => ({
-  type: USER_ACTION_TYPES.FETCH_USER + COMMON_ACTION_TYPES.SUCCESS,
-  data,
-})
-
-const fetchUserError = (error: string) => ({
-  type: USER_ACTION_TYPES.FETCH_USER + COMMON_ACTION_TYPES.ERROR,
-  error,
+  params,
 })
 
 // Delete user (disable)
-const deleteUserRequest = (id: number) => ({
+const deleteUser = (params: UserParams) => ({
   type: USER_ACTION_TYPES.DELETE_USER + COMMON_ACTION_TYPES.REQUEST,
-  payload: id,
-})
-
-const deleteUserSuccess = (id: number) => ({
-  type: USER_ACTION_TYPES.DELETE_USER + COMMON_ACTION_TYPES.SUCCESS,
-  data: id,
-})
-
-const deleteUserError = (error: string) => ({
-  type: USER_ACTION_TYPES.DELETE_USER + COMMON_ACTION_TYPES.ERROR,
-  error,
+  params,
 })
 
 // Enable user
-const enableUserRequest = (id: number) => ({
+const enableUser = (params: UserParams) => ({
   type: USER_ACTION_TYPES.ENABLE_USER + COMMON_ACTION_TYPES.REQUEST,
-  payload: id,
-})
-
-const enableUserSuccess = (id: number) => ({
-  type: USER_ACTION_TYPES.ENABLE_USER + COMMON_ACTION_TYPES.SUCCESS,
-  data: id,
-})
-
-const enableUserError = (error: string) => ({
-  type: USER_ACTION_TYPES.ENABLE_USER + COMMON_ACTION_TYPES.ERROR,
-  error,
+  params,
 })
 
 // Permanent delete user
-const permanentDeleteUserRequest = (id: number) => ({
+const permanentDeleteUser = (params: UserParams) => ({
   type: USER_ACTION_TYPES.PERMANENT_DELETE_USER + COMMON_ACTION_TYPES.REQUEST,
-  payload: id,
-})
-
-const permanentDeleteUserSuccess = (id: number) => ({
-  type: USER_ACTION_TYPES.PERMANENT_DELETE_USER + COMMON_ACTION_TYPES.SUCCESS,
-  data: id,
-})
-
-const permanentDeleteUserError = (error: string) => ({
-  type: USER_ACTION_TYPES.PERMANENT_DELETE_USER + COMMON_ACTION_TYPES.ERROR,
-  error,
-})
-
-// Clear error
-const clearError = () => ({
-  type: USER_ACTION_TYPES.CLEAR_ERROR,
+  params,
 })
 
 export const userActions = {
-  fetchUsersRequest,
-  fetchUsersSuccess,
-  fetchUsersError,
-  fetchUserRequest,
-  fetchUserSuccess,
-  fetchUserError,
-  deleteUserRequest,
-  deleteUserSuccess,
-  deleteUserError,
-  enableUserRequest,
-  enableUserSuccess,
-  enableUserError,
-  permanentDeleteUserRequest,
-  permanentDeleteUserSuccess,
-  permanentDeleteUserError,
-  clearError,
+  fetchUsers,
+  fetchUser,
+  deleteUser,
+  enableUser,
+  permanentDeleteUser,
 }

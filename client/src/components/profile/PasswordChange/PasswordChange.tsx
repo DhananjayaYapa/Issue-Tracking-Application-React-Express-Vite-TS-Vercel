@@ -1,29 +1,20 @@
 import React from 'react'
-import { Paper, TextField, Button, Box, Typography, Alert, Divider, Avatar } from '@mui/material'
+import { Paper, TextField, Button, Box, Typography, Divider, Avatar } from '@mui/material'
 import { Lock as LockIcon } from '@mui/icons-material'
+import type { PasswordFormData } from '../../../utilities/models'
 
 interface PasswordChangeProps {
-  currentPassword: string
-  newPassword: string
-  confirmPassword: string
-  onCurrentPasswordChange: (value: string) => void
-  onNewPasswordChange: (value: string) => void
-  onConfirmPasswordChange: (value: string) => void
+  formData: PasswordFormData
+  onFormChange: (property: keyof PasswordFormData, value: string) => void
   onSubmit: (e: React.FormEvent) => void
   isLoading: boolean
-  error: string | null
 }
 
 const PasswordChange: React.FC<PasswordChangeProps> = ({
-  currentPassword,
-  newPassword,
-  confirmPassword,
-  onCurrentPasswordChange,
-  onNewPasswordChange,
-  onConfirmPasswordChange,
+  formData,
+  onFormChange,
   onSubmit,
   isLoading,
-  error,
 }) => {
   return (
     <Paper sx={{ p: 3, height: '100%' }}>
@@ -50,39 +41,39 @@ const PasswordChange: React.FC<PasswordChangeProps> = ({
 
       <Divider sx={{ mb: 3 }} />
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
       <form onSubmit={onSubmit}>
         <TextField
           label="Current Password"
           type="password"
-          value={currentPassword}
-          onChange={(e) => onCurrentPasswordChange(e.target.value)}
+          value={formData.currentPassword.value}
+          onChange={(e) => onFormChange('currentPassword', e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
           placeholder="Enter current password"
+          error={!!formData.currentPassword.error}
+          helperText={formData.currentPassword.error}
         />
         <TextField
           label="New Password"
           type="password"
-          value={newPassword}
-          onChange={(e) => onNewPasswordChange(e.target.value)}
+          value={formData.newPassword.value}
+          onChange={(e) => onFormChange('newPassword', e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
           placeholder="Enter new password"
+          error={!!formData.newPassword.error}
+          helperText={formData.newPassword.error}
         />
         <TextField
           label="Confirm New Password"
           type="password"
-          value={confirmPassword}
-          onChange={(e) => onConfirmPasswordChange(e.target.value)}
+          value={formData.confirmPassword.value}
+          onChange={(e) => onFormChange('confirmPassword', e.target.value)}
           fullWidth
           sx={{ mb: 3 }}
           placeholder="Confirm new password"
+          error={!!formData.confirmPassword.error}
+          helperText={formData.confirmPassword.error}
         />
         <Button
           type="submit"
