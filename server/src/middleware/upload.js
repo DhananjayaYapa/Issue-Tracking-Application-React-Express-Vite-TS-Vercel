@@ -60,7 +60,6 @@
 
 // module.exports = { upload, UPLOAD_DIR };
 
-
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const path = require("path");
@@ -88,34 +87,44 @@ const fileFilter = (req, file, cb) => {
   } else {
     cb(
       new Error(
-        "Invalid file type. Allowed: JPEG, PNG, GIF, WebP, PDF, DOC, DOCX, XLS, XLSX, TXT, CSV"
+        "Invalid file type. Allowed: JPEG, PNG, GIF, WebP, PDF, DOC, DOCX, XLS, XLSX, TXT, CSV",
       ),
-      false
+      false,
     );
   }
 };
 
-// Multer S3 storage
-const upload = multer({
-  storage: multerS3({
-    s3: s3,
-    bucket: process.env.AWS_BUCKET_NAME,
-    acl: "private", // files are private, you can generate signed URLs to access
-    metadata: (req, file, cb) => {
-      cb(null, { fieldName: file.fieldname });
-    },
-    key: (req, file, cb) => {
-      const timestamp = Date.now().toString();
-      const ext = path.extname(file.originalname);
-      const baseName = path.basename(file.originalname, ext).replace(
-        /[^a-zA-Z0-9_-]/g,
-        "_"
-      );
-      cb(null, `${timestamp}-${baseName}${ext}`);
-    },
-  }),
-  fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-});
+let upload;
+
+if (s3 && process.env.AWS_BUCKET_NAME) {
+  // Multer S3 storage
+  upload = multer({
+    storage: multerS3({
+      s3: s3,
+      bucket: process.env.AWS_BUCKET_NAME,
+      acl: "private",
+      metadata: (req, file, cb) => {
+        cb(null, { fieldName: file.fieldname });
+      },
+      key: (req, file, cb) => {
+        const timestamp = Date.now().toString();
+        const ext = path.extname(file.originalname);
+        const baseName = path
+          .basename(file.originalname, ext)
+          .replace(/[^a-zA-Z0-9_-]/g, "_");
+        cb(null, `${timestamp}-${baseName}${ext}`);
+      },
+    }),
+    fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 },
+  });
+} else {
+  // Fallback to memory storage if S3 is not configured
+  upload = multer({
+    storage: multer.memoryStorage(),
+    fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 },
+  });
+}
 
 module.exports = { upload };
