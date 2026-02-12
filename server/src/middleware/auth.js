@@ -80,13 +80,7 @@ const optionalAuth = (req, res, next) => {
   }
 };
 
-/**
- * Generate JWT Token
- * Creates a new JWT token for a user
- *
- * @param {Object} user - User object with userId, email, name
- * @returns {string} - JWT token
- */
+//Generate JWT Token
 const generateToken = (user) => {
   const payload = {
     userId: user.user_id,
@@ -101,13 +95,7 @@ const generateToken = (user) => {
   });
 };
 
-/**
- * Decode Token (without verification)
- * Useful for getting user info even from expired tokens
- *
- * @param {string} token - JWT token
- * @returns {Object|null} - Decoded payload or null
- */
+//Decode JWT Token
 const decodeToken = (token) => {
   try {
     return jwt.decode(token);
@@ -116,17 +104,7 @@ const decodeToken = (token) => {
   }
 };
 
-/**
- * Role-Based Authorization Middleware
- * Checks if the authenticated user has one of the allowed roles
- * Must be used AFTER the authenticate middleware
- *
- * Usage: router.get('/admin-only', authenticate, authorize('admin'), controller.method)
- * Usage: router.get('/shared', authenticate, authorize('admin', 'user'), controller.method)
- *
- * @param {...string} allowedRoles - Roles that are permitted to access the route
- * @returns {Function} Express middleware
- */
+//Role-Based Authorization Middleware
 const authorize = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -145,13 +123,7 @@ const authorize = (...allowedRoles) => {
   };
 };
 
-/**
- * Require Enabled User Middleware
- * Checks if the authenticated user is enabled (not disabled)
- * Must be used AFTER the authenticate middleware
- *
- * @returns {Function} Express middleware
- */
+//Require Enabled User Middleware
 const requireEnabled = (req, res, next) => {
   if (!req.user) {
     return next(new UnauthorizedError("Authentication required"));

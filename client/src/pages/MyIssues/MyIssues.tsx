@@ -52,13 +52,9 @@ const MyIssues: React.FC = () => {
   const createIssueAlert = useSelector((state: RootState) => state.alert.createIssueAlert)
   const updateIssueAlert = useSelector((state: RootState) => state.alert.updateIssueAlert)
   const deleteIssueAlert = useSelector((state: RootState) => state.alert.deleteIssueAlert)
-
-  // Pending filters (what user selects before clicking Apply)
   const [pendingFilters, setPendingFilters] = useState<IssueFiltersType>({})
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
-
-  // Applied filters (what triggers actual filtering)
   const [appliedFilters, setAppliedFilters] = useState<IssueFiltersType>({})
   const [appliedFromDate, setAppliedFromDate] = useState('')
   const [appliedToDate, setAppliedToDate] = useState('')
