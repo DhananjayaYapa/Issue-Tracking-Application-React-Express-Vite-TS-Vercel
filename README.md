@@ -119,6 +119,11 @@ issue-tracking-application/
 
 ### Instrallation
 
+**Go-to-my-github-**
+**select-refactoring-code-branch**
+**copy-git-link**
+
+
 **select your-project-directory**
 ```bash
 git clone https://github.com/DhananjayaYapa/Issue-Tracking-Application-React-Express-Vite-TS-Vercel.git
