@@ -29,6 +29,7 @@ const authenticate = (req, res, next) => {
       email: decoded.email,
       name: decoded.name,
       role: decoded.role || "user",
+      isEnabled: decoded.isEnabled !== false,
     };
 
     next();
@@ -65,6 +66,7 @@ const optionalAuth = (req, res, next) => {
         email: decoded.email,
         name: decoded.name,
         role: decoded.role || "user",
+        isEnabled: decoded.isEnabled !== false,
       };
     } else {
       req.user = null;
@@ -91,6 +93,7 @@ const generateToken = (user) => {
     email: user.email,
     name: user.name,
     role: user.role || "user",
+    isEnabled: user.is_enabled !== false,
   };
 
   return jwt.sign(payload, process.env.JWT_SECRET, {
@@ -142,10 +145,34 @@ const authorize = (...allowedRoles) => {
   };
 };
 
+/**
+ * Require Enabled User Middleware
+ * Checks if the authenticated user is enabled (not disabled)
+ * Must be used AFTER the authenticate middleware
+ *
+ * @returns {Function} Express middleware
+ */
+const requireEnabled = (req, res, next) => {
+  if (!req.user) {
+    return next(new UnauthorizedError("Authentication required"));
+  }
+
+  if (req.user.isEnabled === false) {
+    return next(
+      new ForbiddenError(
+        "Your account has been disabled. You cannot perform this action.",
+      ),
+    );
+  }
+
+  next();
+};
+
 module.exports = {
   authenticate,
   optionalAuth,
   authorize,
+  requireEnabled,
   generateToken,
   decodeToken,
 };

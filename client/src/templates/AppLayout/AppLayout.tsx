@@ -35,6 +35,7 @@ import { authActions } from '../../redux/actions'
 import type { RootState } from '../../redux/store'
 import { APP_ROUTES, APP_CONFIG, USER_ROLES } from '../../utilities/constants'
 import { AppAuthorizer } from '../../components/shared'
+import { AppLayoutHeader } from '../index'
 import styles from './AppLayout.module.scss'
 
 const DRAWER_WIDTH = 240
@@ -44,18 +45,19 @@ interface NavItem {
   label: string
   path: string
   icon: React.ReactNode
+  /** Roles allowed to see this nav item. If undefined, shown to all authenticated users. */
   allowedRoles?: string[]
 }
 
 const navItems: NavItem[] = [
-  // Shared pages
+  // Shared items (all authenticated users)
   {
     label: 'Dashboard',
     path: APP_ROUTES.DASHBOARD,
     icon: <DashboardIcon />,
     allowedRoles: [USER_ROLES.ADMIN, USER_ROLES.USER],
   },
-  // Admin-only
+  // Admin-only items
   {
     label: 'All Issues',
     path: APP_ROUTES.ISSUES,
@@ -133,6 +135,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   const drawerContent = (
     <Box className={styles.drawerContent}>
+      {/* Logo Section */}
       <Box className={styles.logoSection}>
         <BugIcon sx={{ fontSize: 32, color: 'primary.main' }} />
         {!collapsed && (
@@ -173,7 +176,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   mx: 1,
                   mb: 0.5,
                   '&.Mui-selected': {
-                    bgcolor: '  rgba(20, 18, 50, 0.85)',
+                    bgcolor: 'rgba(20, 18, 50, 0.85)',
                     color: 'white',
                     '& .MuiListItemIcon-root': {
                       color: 'white',
@@ -201,6 +204,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         ))}
       </List>
 
+      {/* User Section */}
       <Box className={styles.userSection}>
         <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
           {user?.name?.charAt(0).toUpperCase() || 'U'}
@@ -229,7 +233,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   )
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', overflow: 'scroll' }}>
       {/* App Bar */}
       <AppBar
         position="fixed"
@@ -252,7 +256,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             <MenuIcon />
           </IconButton>
 
-          <Box sx={{ flexGrow: 1 }} />
+          <AppLayoutHeader />
 
           {/* User Menu */}
           <IconButton onClick={handleMenuOpen}>
@@ -340,10 +344,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { md: `calc(100% - ${drawerWidth}px)` },
           mt: '64px',
+          height: 'calc(100vh - 64px)',
+          overflow: 'auto',
           background: 'linear-gradient(#29273F, #B61A0B)',
-          minHeight: 'calc(100vh - 64px)',
         }}
       >
         {children}

@@ -20,6 +20,8 @@ export const API_ROUTES = {
   // Users (Admin)
   USERS: '/users',
   USER_BY_ID: (id: number) => `/users/${id}`,
+  USER_ENABLE: (id: number) => `/users/${id}/enable`,
+  USER_PERMANENT_DELETE: (id: number) => `/users/${id}/permanent`,
 }
 
 //App routes

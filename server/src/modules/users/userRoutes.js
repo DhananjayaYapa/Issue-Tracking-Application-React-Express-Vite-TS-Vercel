@@ -10,6 +10,11 @@ router.use(authorize(USER_ROLES.ADMIN));
 
 router.get("/", asyncHandler(UserController.getAllUsers));
 router.get("/:id", asyncHandler(UserController.getUserById));
+router.patch("/:id/enable", asyncHandler(UserController.enableUser));
 router.delete("/:id", asyncHandler(UserController.deleteUser));
+router.delete(
+  "/:id/permanent",
+  asyncHandler(UserController.permanentDeleteUser),
+);
 
 module.exports = router;

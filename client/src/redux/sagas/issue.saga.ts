@@ -3,6 +3,7 @@ import { call, put, takeLatest } from 'redux-saga/effects'
 import { issueService } from '../../services'
 import { issueActions } from '../actions'
 import { ISSUE_ACTION_TYPES, COMMON_ACTION_TYPES } from '../../utilities/constants'
+import { dispatchAlert } from '../../utilities/helpers'
 import type {
   IssueFiltersDto,
   CreateIssuePayload,
@@ -48,8 +49,20 @@ function* createIssueSaga(action: { type: string; payload: CreateIssuePayload })
       action.payload
     )
     yield put(issueActions.createIssueSuccess(response.data.data))
+    yield* dispatchAlert(
+      ISSUE_ACTION_TYPES.CREATE_ISSUE,
+      response.data.message || 'Issue created successfully',
+      'success'
+    )
   } catch (error: any) {
     yield put(issueActions.createIssueError(error))
+    const backendMessage =
+      error?.response?.data?.message || error?.response?.data?.error || error?.message
+    yield* dispatchAlert(
+      ISSUE_ACTION_TYPES.CREATE_ISSUE,
+      backendMessage || 'Failed to create issue',
+      'error'
+    )
   }
 }
 
@@ -63,8 +76,20 @@ function* updateIssueSaga(action: { type: string; payload: UpdateIssuePayload })
       data
     )
     yield put(issueActions.updateIssueSuccess(response.data.data))
+    yield* dispatchAlert(
+      ISSUE_ACTION_TYPES.UPDATE_ISSUE,
+      response.data.message || 'Issue updated successfully',
+      'success'
+    )
   } catch (error: any) {
     yield put(issueActions.updateIssueError(error))
+    const backendMessage =
+      error?.response?.data?.message || error?.response?.data?.error || error?.message
+    yield* dispatchAlert(
+      ISSUE_ACTION_TYPES.UPDATE_ISSUE,
+      backendMessage || 'Failed to update issue',
+      'error'
+    )
   }
 }
 
@@ -73,8 +98,16 @@ function* deleteIssueSaga(action: { type: string; payload: number }) {
   try {
     yield call(issueService.deleteIssue, action.payload)
     yield put(issueActions.deleteIssueSuccess(action.payload))
+    yield* dispatchAlert(ISSUE_ACTION_TYPES.DELETE_ISSUE, 'Issue deleted successfully', 'success')
   } catch (error: any) {
     yield put(issueActions.deleteIssueError(error))
+    const backendMessage =
+      error?.response?.data?.message || error?.response?.data?.error || error?.message
+    yield* dispatchAlert(
+      ISSUE_ACTION_TYPES.DELETE_ISSUE,
+      backendMessage || 'Failed to delete issue',
+      'error'
+    )
   }
 }
 

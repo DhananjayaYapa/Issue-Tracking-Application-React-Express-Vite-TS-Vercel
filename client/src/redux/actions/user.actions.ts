@@ -32,7 +32,7 @@ const fetchUserError = (error: string) => ({
   error,
 })
 
-// Delete user
+// Delete user (disable)
 const deleteUserRequest = (id: number) => ({
   type: USER_ACTION_TYPES.DELETE_USER + COMMON_ACTION_TYPES.REQUEST,
   payload: id,
@@ -45,6 +45,38 @@ const deleteUserSuccess = (id: number) => ({
 
 const deleteUserError = (error: string) => ({
   type: USER_ACTION_TYPES.DELETE_USER + COMMON_ACTION_TYPES.ERROR,
+  error,
+})
+
+// Enable user
+const enableUserRequest = (id: number) => ({
+  type: USER_ACTION_TYPES.ENABLE_USER + COMMON_ACTION_TYPES.REQUEST,
+  payload: id,
+})
+
+const enableUserSuccess = (id: number) => ({
+  type: USER_ACTION_TYPES.ENABLE_USER + COMMON_ACTION_TYPES.SUCCESS,
+  data: id,
+})
+
+const enableUserError = (error: string) => ({
+  type: USER_ACTION_TYPES.ENABLE_USER + COMMON_ACTION_TYPES.ERROR,
+  error,
+})
+
+// Permanent delete user
+const permanentDeleteUserRequest = (id: number) => ({
+  type: USER_ACTION_TYPES.PERMANENT_DELETE_USER + COMMON_ACTION_TYPES.REQUEST,
+  payload: id,
+})
+
+const permanentDeleteUserSuccess = (id: number) => ({
+  type: USER_ACTION_TYPES.PERMANENT_DELETE_USER + COMMON_ACTION_TYPES.SUCCESS,
+  data: id,
+})
+
+const permanentDeleteUserError = (error: string) => ({
+  type: USER_ACTION_TYPES.PERMANENT_DELETE_USER + COMMON_ACTION_TYPES.ERROR,
   error,
 })
 
@@ -63,5 +95,11 @@ export const userActions = {
   deleteUserRequest,
   deleteUserSuccess,
   deleteUserError,
+  enableUserRequest,
+  enableUserSuccess,
+  enableUserError,
+  permanentDeleteUserRequest,
+  permanentDeleteUserSuccess,
+  permanentDeleteUserError,
   clearError,
 }

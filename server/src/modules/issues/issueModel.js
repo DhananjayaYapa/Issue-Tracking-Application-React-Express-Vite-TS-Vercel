@@ -74,11 +74,6 @@ class IssueModel {
           attributes: ["userId", "name", "email"],
         },
         {
-          model: User,
-          as: "assignee",
-          attributes: ["userId", "name", "email"],
-        },
-        {
           model: IssueStatus,
           as: "status",
           attributes: ["name"],
@@ -104,14 +99,11 @@ class IssueModel {
       status: issue.status?.name,
       priority: issue.priority?.name,
       created_by: issue.createdBy,
-      assigned_to: issue.assignedTo,
       created_at: issue.created_at,
       updated_at: issue.updated_at,
       resolved_at: issue.resolvedAt,
       creator_name: issue.creator?.name,
       creator_email: issue.creator?.email,
-      assignee_name: issue.assignee?.name,
-      assignee_email: issue.assignee?.email,
       attachment: issue.attachment,
     }));
   }
@@ -132,11 +124,6 @@ class IssueModel {
           as: "creator",
           attributes: ["userId", "name", "email"],
         },
-        {
-          model: User,
-          as: "assignee",
-          attributes: ["userId", "name", "email"],
-        },
         { model: IssueStatus, as: "status", attributes: ["name"] },
         { model: IssuePriority, as: "priority", attributes: ["name"] },
       ],
@@ -151,21 +138,18 @@ class IssueModel {
       status: issue.status?.name,
       priority: issue.priority?.name,
       created_by: issue.createdBy,
-      assigned_to: issue.assignedTo,
       created_at: issue.created_at,
       updated_at: issue.updated_at,
       resolved_at: issue.resolvedAt,
       creator_name: issue.creator?.name,
       creator_email: issue.creator?.email,
-      assignee_name: issue.assignee?.name,
-      assignee_email: issue.assignee?.email,
       attachment: issue.attachment,
     };
   }
 
   /**
    * Create new issue
-   * @param {Object} issueData - { title, description, status, priority, createdBy, assignedTo }
+   * @param {Object} issueData - { title, description, status, priority, createdBy }
    * @returns {Promise<Object>} - Created issue
    */
   static async createIssue(issueData) {
@@ -178,7 +162,6 @@ class IssueModel {
       status = "Open",
       priority = "Medium",
       createdBy,
-      assignedTo = null,
       attachment = null,
     } = issueData;
 
@@ -193,7 +176,6 @@ class IssueModel {
       statusId: statusObj?.statusId || 1,
       priorityId: priorityObj?.priorityId || 2,
       createdBy,
-      assignedTo,
       attachment,
     });
 
@@ -210,14 +192,12 @@ class IssueModel {
     const IssueStatus = require("../../config/db/models/IssueStatus");
     const IssuePriority = require("../../config/db/models/IssuePriority");
 
-    const { title, description, status, priority, assignedTo, attachment } =
-      issueData;
+    const { title, description, status, priority, attachment } = issueData;
 
     const updateData = {};
 
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
-    if (assignedTo !== undefined) updateData.assignedTo = assignedTo;
     if (attachment !== undefined) updateData.attachment = attachment;
 
     if (status !== undefined) {
@@ -437,11 +417,6 @@ class IssueModel {
           attributes: ["name"],
         },
         {
-          model: User,
-          as: "assignee",
-          attributes: ["name"],
-        },
-        {
           model: IssueStatus,
           as: "status",
           attributes: ["name"],
@@ -466,7 +441,6 @@ class IssueModel {
       status: issue.status?.name,
       priority: issue.priority?.name,
       created_by_name: issue.creator?.name,
-      assigned_to_name: issue.assignee?.name,
       created_at: issue.created_at,
       updated_at: issue.updated_at,
       resolved_at: issue.resolvedAt,

@@ -10,6 +10,7 @@ interface FilterSelectProps {
   size?: 'small' | 'medium'
   minWidth?: number
   disabled?: boolean
+  fullWidth?: boolean
 }
 
 const FilterSelect: React.FC<FilterSelectProps> = ({
@@ -21,13 +22,14 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
   size = 'small',
   minWidth = 120,
   disabled = false,
+  fullWidth = false,
 }) => {
   const handleChange = (event: SelectChangeEvent) => {
     onChange(event.target.value)
   }
 
   return (
-    <FormControl size={size} sx={{ minWidth }} disabled={disabled}>
+    <FormControl size={size} sx={{ minWidth }} disabled={disabled} fullWidth={fullWidth}>
       <InputLabel>{label}</InputLabel>
       <Select value={value} label={label} onChange={handleChange} sx={{ borderRadius: 50 }}>
         <MenuItem value="">{allLabel}</MenuItem>

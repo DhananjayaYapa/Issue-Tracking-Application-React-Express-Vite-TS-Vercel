@@ -7,22 +7,10 @@ User.hasMany(Issue, {
   as: "createdIssues",
 });
 
-// User has many Issues
-User.hasMany(Issue, {
-  foreignKey: "assignedTo",
-  as: "assignedIssues",
-});
-
 // Issue belongs to User
 Issue.belongsTo(User, {
   foreignKey: "createdBy",
   as: "creator",
-});
-
-// Issue belongs to User (assignee)
-Issue.belongsTo(User, {
-  foreignKey: "assignedTo",
-  as: "assignee",
 });
 
 // Issue has Status, Priority

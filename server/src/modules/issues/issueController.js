@@ -173,7 +173,7 @@ class IssueController {
   // Create new issue
   static async createIssue(req, res, next) {
     try {
-      const { title, description, status, priority, assignedTo } = req.body;
+      const { title, description, status, priority } = req.body;
       const createdBy = req.user.userId;
       const attachment = req.file ? `/uploads/${req.file.filename}` : null;
 
@@ -201,7 +201,6 @@ class IssueController {
         status,
         priority,
         createdBy,
-        assignedTo,
         attachment,
       });
 
@@ -222,7 +221,7 @@ class IssueController {
   static async updateIssue(req, res, next) {
     try {
       const { id } = req.params;
-      const { title, description, status, priority, assignedTo } = req.body;
+      const { title, description, status, priority } = req.body;
 
       // Check if issue exists
       const existingIssue = await IssueModel.getIssueById(id);
@@ -270,7 +269,6 @@ class IssueController {
         description,
         status,
         priority,
-        assignedTo,
         attachment,
       });
 
@@ -315,10 +313,16 @@ class IssueController {
   static async deleteIssue(req, res, next) {
     try {
       const { id } = req.params;
+      const { userId, role } = req.user;
 
       const existingIssue = await IssueModel.getIssueById(id);
       if (!existingIssue) {
         return notFoundResponse(res, "Issue not found");
+      }
+
+      // Users can only delete their own issues, admins can delete any
+      if (role !== "admin" && existingIssue.created_by !== userId) {
+        return forbiddenResponse(res, "You can only delete your own issues");
       }
 
       await IssueModel.deleteIssue(id);
@@ -378,13 +382,6 @@ function formatIssueResponse(issue) {
       name: issue.creator_name,
       email: issue.creator_email,
     },
-    assignedTo: issue.assigned_to
-      ? {
-          id: issue.assigned_to,
-          name: issue.assignee_name,
-          email: issue.assignee_email,
-        }
-      : null,
     createdAt: issue.created_at,
     updatedAt: issue.updated_at,
     resolvedAt: issue.resolved_at,

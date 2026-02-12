@@ -1,4 +1,5 @@
 const { User } = require("../../config/db/models");
+const { Issue } = require("../../config/db/models");
 const { Op } = require("sequelize");
 
 class AuthModel {
@@ -32,7 +33,6 @@ class AuthModel {
     const user = await User.scope("withPassword").findOne({
       where: {
         email,
-        isEnabled: true,
       },
     });
 
@@ -137,12 +137,38 @@ class AuthModel {
   }
 
   /**
+   * Enable user (re-enable disabled account)
+   * @param {number} userId - User ID
+   * @returns {Promise<Object>} - Update result
+   */
+  static async enableUser(userId) {
+    await User.update({ isEnabled: true }, { where: { userId } });
+    return { user_id: userId };
+  }
+
+  /**
+   * Permanently delete user and their issues
+   * @param {number} userId - User ID
+   * @returns {Promise<Object>} - Delete result with counts
+   */
+  static async permanentDeleteUser(userId) {
+    // Delete all issues created by the user first
+    const deletedIssuesCount = await Issue.destroy({
+      where: { createdBy: userId },
+    });
+
+    // Then delete the user
+    await User.destroy({ where: { userId } });
+
+    return { user_id: userId, deleted_issues: deletedIssuesCount };
+  }
+
+  /**
    * Get all users (for admin purposes)
    * @returns {Promise<Array>} - Array of user objects
    */
   static async getAllUsers() {
     const users = await User.findAll({
-      where: { isEnabled: true },
       order: [["created_at", "DESC"]],
     });
 
@@ -151,9 +177,33 @@ class AuthModel {
       name: user.name,
       email: user.email,
       role: user.role,
+      is_enabled: user.isEnabled,
       created_at: user.created_at,
       updated_at: user.updated_at,
     }));
+  }
+
+  /**
+   * Find user by ID (including disabled users - for admin purposes)
+   * @param {number} userId - User ID
+   * @returns {Promise<Object|null>} - User object (without password) or null
+   */
+  static async findByIdIncludingDisabled(userId) {
+    const user = await User.findOne({
+      where: { userId },
+    });
+
+    if (!user) return null;
+
+    return {
+      user_id: user.userId,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      is_enabled: user.isEnabled,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    };
   }
 }
 

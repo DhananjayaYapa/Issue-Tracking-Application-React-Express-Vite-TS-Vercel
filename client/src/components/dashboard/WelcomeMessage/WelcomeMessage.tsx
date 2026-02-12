@@ -3,22 +3,16 @@ import { Box, Typography } from '@mui/material'
 
 interface WelcomeMessageProps {
   userName?: string
-  message?: string
+  isAdmin?: boolean
 }
 
-const WelcomeMessage: React.FC<WelcomeMessageProps> = ({
-  userName = 'User',
-  message = 'Welcome Back User... ',
-}) => {
-  const firstName = userName.split(' ')[0] || userName
+const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ userName = 'User', isAdmin = false }) => {
+  const firstName = isAdmin ? userName : userName.split(' ')[0] || userName
 
   return (
     <Box sx={{ mb: 4 }}>
-      <Typography variant="h4" fontWeight={600}>
+      <Typography variant="h4" fontWeight={600} color="#ffffff">
         Welcome back, {firstName}!
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        {message}
       </Typography>
     </Box>
   )

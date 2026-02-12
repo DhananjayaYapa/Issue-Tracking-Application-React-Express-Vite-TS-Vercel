@@ -10,10 +10,8 @@ import {
   Alert,
   Table,
   TableBody,
-  TableCell,
   TableContainer,
   TableHead,
-  TableRow,
   TablePagination,
   CircularProgress,
   Menu,
@@ -26,20 +24,29 @@ import {
   Description as CsvIcon,
   DataObject as JsonIcon,
 } from '@mui/icons-material'
-import { issueActions } from '../../redux/actions'
+import { issueActions, alertActions } from '../../redux/actions'
 import type { RootState } from '../../redux/store'
 import type { ExportFiltersDto, User } from '../../utilities/models'
-import { PageHeader, FilterSelect, StatusChip } from '../../components/shared'
-import { ISSUE_STATUS, ISSUE_PRIORITY } from '../../utilities/constants'
+import { FilterSelect, StatusChip } from '../../components/shared'
+import {
+  ISSUE_STATUS,
+  ISSUE_PRIORITY,
+  EXPORT_ACTION_TYPES,
+  COMMON_ACTION_TYPES,
+  ALERT_CONFIGS,
+  APP_TABLE_CONFIG,
+} from '../../utilities/constants'
 import { issueService } from '../../services/issue.service'
 import { userService } from '../../services/user.service'
 import { formatDate } from '../../utilities/helpers/commonFunctions'
 import styles from './IssueReport.module.scss'
+import { paginationSx, StyledTableCell, StyledTableRow } from '../../assets/theme/theme'
 
 const IssueReport: React.FC = () => {
   const dispatch = useDispatch()
   const { user } = useSelector((state: RootState) => state.auth)
   const { metadata } = useSelector((state: RootState) => state.issues)
+  const downloadReportAlert = useSelector((state: RootState) => state.alert.downloadReportAlert)
 
   const isAdmin = user?.role === 'admin'
 
@@ -64,6 +71,9 @@ const IssueReport: React.FC = () => {
         setUsers(res.data.data || [])
       })
     }
+    // Load all issues by default
+    loadReport()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, isAdmin])
 
   const statusOptions = (metadata?.statuses || Object.values(ISSUE_STATUS)).map((s) => ({
@@ -91,13 +101,13 @@ const IssueReport: React.FC = () => {
     return params
   }
 
-  const handleViewReport = async () => {
+  const loadReport = async (overrideParams?: ExportFiltersDto) => {
     setLoading(true)
     setError(null)
     setViewed(true)
     setPage(0)
     try {
-      const params = buildFilterParams()
+      const params = overrideParams !== undefined ? overrideParams : buildFilterParams()
       const response = await issueService.exportJson(params)
       const text = await (response.data as Blob).text()
       const json = JSON.parse(text)
@@ -111,6 +121,10 @@ const IssueReport: React.FC = () => {
     }
   }
 
+  const handleViewReport = () => {
+    loadReport()
+  }
+
   const handleReset = () => {
     setFilters({})
     setFromDate('')
@@ -118,6 +132,7 @@ const IssueReport: React.FC = () => {
     setReportData([])
     setViewed(false)
     setError(null)
+    loadReport({})
   }
 
   const handleDownload = async (format: 'csv' | 'json') => {
@@ -141,7 +156,21 @@ const IssueReport: React.FC = () => {
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
+      dispatch({
+        type: EXPORT_ACTION_TYPES.DOWNLOAD_REPORT + COMMON_ACTION_TYPES.SET_ALERT_REQ,
+        message: `Report downloaded successfully as ${format.toUpperCase()}`,
+        severity: 'success',
+        autoClear: true,
+        timeout: ALERT_CONFIGS.TIMEOUT,
+      })
     } catch {
+      dispatch({
+        type: EXPORT_ACTION_TYPES.DOWNLOAD_REPORT + COMMON_ACTION_TYPES.SET_ALERT_REQ,
+        message: 'Failed to download report',
+        severity: 'error',
+        autoClear: true,
+        timeout: ALERT_CONFIGS.TIMEOUT,
+      })
       setError('Failed to download report')
     }
   }
@@ -154,30 +183,29 @@ const IssueReport: React.FC = () => {
   }
 
   const paginatedData = reportData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  const today = new Date().toISOString().split('T')[0]
 
   return (
     <Box className={styles.reportPage}>
-      <PageHeader title="Issue Report" />
-
-      {/* Filters */}
       <Paper className={styles.filtersCard}>
         <Typography variant="subtitle1" fontWeight={600} gutterBottom>
           Report Filters
         </Typography>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={3}>
+        <Grid container spacing={2} alignItems="center" mt={1}>
+          <Grid item xs={12} sm={6} lg={3}>
             <TextField
               fullWidth
               label="From Date"
               type="date"
               size="small"
               value={fromDate}
+              slotProps={{ inputLabel: { shrink: true }, htmlInput: { max: today } }}
               onChange={(e) => setFromDate(e.target.value)}
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} lg={3}>
             <TextField
               fullWidth
               label="To Date"
@@ -185,39 +213,41 @@ const IssueReport: React.FC = () => {
               size="small"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
+              slotProps={{ inputLabel: { shrink: true }, htmlInput: { max: today } }}
               InputLabelProps={{ shrink: true }}
               inputProps={{ min: fromDate || undefined }}
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid item xs={12} sm={6} lg={2}>
             <FilterSelect
               label="Status"
               value={filters.status || ''}
               options={statusOptions}
               onChange={(value) => handleFilterChange('status', value)}
-              minWidth={140}
+              fullWidth
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid item xs={12} sm={6} lg={2}>
             <FilterSelect
               label="Priority"
               value={filters.priority || ''}
               options={priorityOptions}
               onChange={(value) => handleFilterChange('priority', value)}
-              minWidth={140}
+              fullWidth
             />
           </Grid>
 
           {isAdmin && (
-            <Grid item xs={12} sm={6} md={2}>
+            <Grid item xs={12} sm={6} lg={2}>
               <FilterSelect
                 label="Created By"
                 value={filters.createdBy ? String(filters.createdBy) : ''}
                 options={userOptions}
                 onChange={(value) => handleFilterChange('createdBy', value)}
                 minWidth={140}
+                fullWidth
               />
             </Grid>
           )}
@@ -228,7 +258,7 @@ const IssueReport: React.FC = () => {
             {loading ? <CircularProgress size={20} sx={{ mr: 1 }} /> : null}
             View Report
           </Button>
-          <Button variant="outlined" onClick={handleReset} disabled={loading}>
+          <Button variant="contained" onClick={handleReset} disabled={loading}>
             Reset
           </Button>
         </Box>
@@ -240,103 +270,134 @@ const IssueReport: React.FC = () => {
         </Alert>
       )}
 
-      {viewed && !loading && (
-        <Paper className={styles.tableCard}>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              p: 2,
-              pb: 0,
-            }}
-          >
-            <Typography variant="subtitle1" fontWeight={600}>
-              Results ({reportData.length} {reportData.length === 1 ? 'issue' : 'issues'})
-            </Typography>
-            {reportData.length > 0 && (
-              <>
-                <Button
-                  variant="outlined"
-                  startIcon={<DownloadIcon />}
-                  onClick={(e) => setAnchorEl(e.currentTarget)}
-                >
-                  Download
-                </Button>
-                <Menu anchorEl={anchorEl} open={downloadMenuOpen} onClose={() => setAnchorEl(null)}>
-                  <MenuItem onClick={() => handleDownload('csv')}>
-                    <ListItemIcon>
-                      <CsvIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Download CSV</ListItemText>
-                  </MenuItem>
-                  <MenuItem onClick={() => handleDownload('json')}>
-                    <ListItemIcon>
-                      <JsonIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Download JSON</ListItemText>
-                  </MenuItem>
-                </Menu>
-              </>
-            )}
-          </Box>
+      {downloadReportAlert?.message && (
+        <Alert
+          severity={downloadReportAlert.severity ?? 'info'}
+          onClose={() => dispatch(alertActions.clearDownloadReportAlert())}
+          sx={{ mb: 2 }}
+        >
+          {downloadReportAlert.message}
+        </Alert>
+      )}
 
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Title</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Priority</TableCell>
-                  <TableCell>Created By</TableCell>
-                  <TableCell>Assigned To</TableCell>
-                  <TableCell>Created At</TableCell>
-                  <TableCell>Resolved At</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {reportData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} align="center">
-                      <Typography color="text.secondary" py={4}>
-                        No issues found for the selected filters
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedData.map((issue) => (
-                    <TableRow key={issue.id} hover>
-                      <TableCell>{issue.id}</TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            maxWidth: 250,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {issue.title}
+      {viewed && !loading && (
+        <>
+          <Paper className={styles.tableCard}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                p: 2,
+                pb: 0,
+              }}
+            >
+              <Typography variant="subtitle1" fontWeight={600}>
+                Results ({reportData.length} {reportData.length === 1 ? 'issue' : 'issues'})
+              </Typography>
+              {reportData.length > 0 && (
+                <>
+                  <Button
+                    variant="outlined"
+                    startIcon={<DownloadIcon />}
+                    onClick={(e) => setAnchorEl(e.currentTarget)}
+                    sx={{ mb: '8px' }}
+                  >
+                    Download
+                  </Button>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={downloadMenuOpen}
+                    onClose={() => setAnchorEl(null)}
+                  >
+                    <MenuItem onClick={() => handleDownload('csv')}>
+                      <ListItemIcon>
+                        <CsvIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Download CSV</ListItemText>
+                    </MenuItem>
+                    <MenuItem onClick={() => handleDownload('json')}>
+                      <ListItemIcon>
+                        <JsonIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Download JSON</ListItemText>
+                    </MenuItem>
+                  </Menu>
+                </>
+              )}
+            </Box>
+
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <StyledTableRow>
+                    <StyledTableCell>ID</StyledTableCell>
+                    <StyledTableCell>Title</StyledTableCell>
+                    <StyledTableCell>Description</StyledTableCell>
+                    <StyledTableCell>Status</StyledTableCell>
+                    <StyledTableCell>Priority</StyledTableCell>
+                    <StyledTableCell>Created By</StyledTableCell>
+                    <StyledTableCell>Created At</StyledTableCell>
+                    <StyledTableCell>Resolved At</StyledTableCell>
+                  </StyledTableRow>
+                </TableHead>
+                <TableBody>
+                  {reportData.length === 0 ? (
+                    <StyledTableRow>
+                      <StyledTableCell colSpan={7} align="center">
+                        <Typography color="text.secondary" py={4}>
+                          No issues found for the selected filters
                         </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <StatusChip variant="status" value={issue.status} />
-                      </TableCell>
-                      <TableCell>
-                        <StatusChip variant="priority" value={issue.priority} outlined />
-                      </TableCell>
-                      <TableCell>{issue.createdBy}</TableCell>
-                      <TableCell>{issue.assignedTo || '—'}</TableCell>
-                      <TableCell>{formatDate(issue.createdAt)}</TableCell>
-                      <TableCell>{issue.resolvedAt ? formatDate(issue.resolvedAt) : '—'}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                      </StyledTableCell>
+                    </StyledTableRow>
+                  ) : (
+                    paginatedData.map((issue) => (
+                      <StyledTableRow key={issue.id} hover>
+                        <StyledTableCell>{issue.id}</StyledTableCell>
+                        <StyledTableCell>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              maxWidth: 170,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {issue.title}
+                          </Typography>
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              maxWidth: 170,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {issue.description}
+                          </Typography>
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          <StatusChip variant="status" value={issue.status} />
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          <StatusChip variant="priority" value={issue.priority} outlined />
+                        </StyledTableCell>
+                        <StyledTableCell>{issue.createdBy}</StyledTableCell>
+                        <StyledTableCell>{formatDate(issue.createdAt)}</StyledTableCell>
+                        <StyledTableCell>
+                          {issue.resolvedAt ? formatDate(issue.resolvedAt) : '—'}
+                        </StyledTableCell>
+                      </StyledTableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
 
           {reportData.length > 0 && (
             <TablePagination
@@ -349,10 +410,11 @@ const IssueReport: React.FC = () => {
                 setRowsPerPage(parseInt(e.target.value, 10))
                 setPage(0)
               }}
-              rowsPerPageOptions={[10, 25, 50, 100]}
+              rowsPerPageOptions={APP_TABLE_CONFIG.ITEMS_PER_PAGE_OPTION}
+              sx={paginationSx}
             />
           )}
-        </Paper>
+        </>
       )}
     </Box>
   )
