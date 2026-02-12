@@ -51,7 +51,8 @@ const IssueFormDialog: React.FC<IssueFormDialogProps> = ({
   onAttachmentChange,
   existingAttachment = null,
 }) => {
-  const { metadata } = useSelector((state: RootState) => state.issues)
+  const { fetchMetadata } = useSelector((state: RootState) => state.issues)
+  const metadata = fetchMetadata.data
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -99,11 +100,14 @@ const IssueFormDialog: React.FC<IssueFormDialogProps> = ({
                     label="Status"
                     onChange={(e: SelectChangeEvent) => onChange('status', e.target.value)}
                   >
-                    {(metadata?.statuses || Object.values(ISSUE_STATUS)).map((status) => (
-                      <MenuItem key={status} value={status}>
-                        {status}
-                      </MenuItem>
-                    ))}
+                    {(metadata?.statuses || Object.values(ISSUE_STATUS))
+                      .slice()
+                      .sort((a: string, b: string) => a.localeCompare(b))
+                      .map((status: string) => (
+                        <MenuItem key={status} value={status}>
+                          {status}
+                        </MenuItem>
+                      ))}
                   </Select>
                 </FormControl>
               </Grid>
@@ -116,11 +120,14 @@ const IssueFormDialog: React.FC<IssueFormDialogProps> = ({
                   label="Priority"
                   onChange={(e: SelectChangeEvent) => onChange('priority', e.target.value)}
                 >
-                  {(metadata?.priorities || Object.values(ISSUE_PRIORITY)).map((priority) => (
-                    <MenuItem key={priority} value={priority}>
-                      {priority}
-                    </MenuItem>
-                  ))}
+                  {(metadata?.priorities || Object.values(ISSUE_PRIORITY))
+                    .slice()
+                    .sort((a: string, b: string) => a.localeCompare(b))
+                    .map((priority: string) => (
+                      <MenuItem key={priority} value={priority}>
+                        {priority}
+                      </MenuItem>
+                    ))}
                 </Select>
               </FormControl>
             </Grid>

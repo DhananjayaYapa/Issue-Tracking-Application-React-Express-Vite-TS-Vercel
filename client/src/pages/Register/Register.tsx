@@ -53,6 +53,14 @@ const Register: React.FC = () => {
 
   const password = watch('password')
 
+  const handleToggleShowPassword = () => {
+    setShowPassword(!showPassword)
+  }
+
+  const handleToggleShowConfirmPassword = () => {
+    setShowConfirmPassword(!showConfirmPassword)
+  }
+
   useEffect(() => {
     if (registrationSuccess) {
       navigate(APP_ROUTES.LOGIN, { replace: true })
@@ -142,11 +150,7 @@ const Register: React.FC = () => {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                      disabled={isLoading}
-                    >
+                    <IconButton onClick={handleToggleShowPassword} edge="end" disabled={isLoading}>
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
@@ -173,7 +177,7 @@ const Register: React.FC = () => {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={handleToggleShowConfirmPassword}
                       edge="end"
                       disabled={isLoading}
                     >
