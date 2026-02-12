@@ -10,7 +10,6 @@ import {
   Button,
   Typography,
   Link,
-  Alert,
   InputAdornment,
   IconButton,
   CircularProgress,
@@ -78,12 +77,6 @@ const Login: React.FC = () => {
             </Typography>
           </Box>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <TextField
               fullWidth
@@ -107,8 +100,8 @@ const Login: React.FC = () => {
               label="Password"
               type={showPassword ? 'text' : 'password'}
               margin="normal"
-              error={!!errors.password}
-              helperText={errors.password?.message}
+              error={!!errors.password || !!error}
+              helperText={errors.password?.message || error}
               disabled={isLoading}
               InputProps={{
                 endAdornment: (
