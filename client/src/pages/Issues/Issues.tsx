@@ -23,13 +23,10 @@ const Issues: React.FC = () => {
   const updateIssueAlert = useSelector((state: RootState) => state.alert.updateIssueAlert)
   const deleteIssueAlert = useSelector((state: RootState) => state.alert.deleteIssueAlert)
 
-  // Pending filters (what user selects before clicking Apply)
   const [pendingFilters, setPendingFilters] = useState<IssueFiltersType>({})
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
   const [createdByValue, setCreatedByValue] = useState('')
-
-  // Applied filters (what triggers API call)
   const [appliedFilters, setAppliedFilters] = useState<IssueFiltersType>({})
   const [users, setUsers] = useState<User[]>([])
 
@@ -52,7 +49,7 @@ const Issues: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [page, setPage] = useState(0)
 
-  // Filter issues based on search input
+  // search
   const filteredIssues = issues.filter((issue) => {
     if (!searchInput.trim()) return true
     const searchTerm = searchInput.trim().toLowerCase()
