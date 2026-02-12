@@ -117,10 +117,12 @@ issue-tracking-application/
 - MySQL 8+
 - npm or yarn
 
-### Instralation
+### Instrallation
 
-cd your-project-directory
+**select your-project-directory**
+```bash
 git clone https://github.com/DhananjayaYapa/Issue-Tracking-Application-React-Express-Vite-TS-Vercel.git
+```
 
 ### Backend Setup
 
