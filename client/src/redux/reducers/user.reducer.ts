@@ -61,7 +61,7 @@ const userReducer = (state = INITIAL_STATE, action: any): UserManagementState =>
         error: action.error,
       }
 
-    // Delete User
+    // Delete User (Disable)
     case USER_ACTION_TYPES.DELETE_USER + COMMON_ACTION_TYPES.REQUEST:
       return {
         ...state,
@@ -72,10 +72,50 @@ const userReducer = (state = INITIAL_STATE, action: any): UserManagementState =>
       return {
         ...state,
         isLoading: false,
-        users: state.users.filter((user) => user.userId !== action.data),
         error: null,
       }
     case USER_ACTION_TYPES.DELETE_USER + COMMON_ACTION_TYPES.ERROR:
+      return {
+        ...state,
+        isLoading: false,
+        error: action.error,
+      }
+
+    // Enable User
+    case USER_ACTION_TYPES.ENABLE_USER + COMMON_ACTION_TYPES.REQUEST:
+      return {
+        ...state,
+        isLoading: true,
+        error: null,
+      }
+    case USER_ACTION_TYPES.ENABLE_USER + COMMON_ACTION_TYPES.SUCCESS:
+      return {
+        ...state,
+        isLoading: false,
+        error: null,
+      }
+    case USER_ACTION_TYPES.ENABLE_USER + COMMON_ACTION_TYPES.ERROR:
+      return {
+        ...state,
+        isLoading: false,
+        error: action.error,
+      }
+
+    // Permanent Delete User
+    case USER_ACTION_TYPES.PERMANENT_DELETE_USER + COMMON_ACTION_TYPES.REQUEST:
+      return {
+        ...state,
+        isLoading: true,
+        error: null,
+      }
+    case USER_ACTION_TYPES.PERMANENT_DELETE_USER + COMMON_ACTION_TYPES.SUCCESS:
+      return {
+        ...state,
+        isLoading: false,
+        users: state.users.filter((user) => user.userId !== action.data),
+        error: null,
+      }
+    case USER_ACTION_TYPES.PERMANENT_DELETE_USER + COMMON_ACTION_TYPES.ERROR:
       return {
         ...state,
         isLoading: false,

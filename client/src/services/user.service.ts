@@ -14,8 +14,18 @@ const deleteUser = (id: number) => {
   return axiosPrivateInstance.delete(API_ROUTES.USER_BY_ID(id))
 }
 
+const enableUser = (id: number) => {
+  return axiosPrivateInstance.patch(API_ROUTES.USER_ENABLE(id))
+}
+
+const permanentDeleteUser = (id: number) => {
+  return axiosPrivateInstance.delete(API_ROUTES.USER_PERMANENT_DELETE(id))
+}
+
 export const userService = {
   getUsers,
   getUser,
   deleteUser,
+  enableUser,
+  permanentDeleteUser,
 }

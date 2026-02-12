@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS issues (
     status ENUM('Open', 'In Progress', 'Resolved', 'Closed') DEFAULT 'Open',
     priority ENUM('Low', 'Medium', 'High', 'Critical') DEFAULT 'Medium',
     created_by INT NOT NULL,
-    assigned_to INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     resolved_at TIMESTAMP NULL,
@@ -30,14 +29,11 @@ CREATE TABLE IF NOT EXISTS issues (
 
     -- Foreign Keys
     CONSTRAINT fk_issues_created_by FOREIGN KEY (created_by)
-        REFERENCES users(user_id) ON DELETE RESTRICT,
-    CONSTRAINT fk_issues_assigned_to FOREIGN KEY (assigned_to)
-        REFERENCES users(user_id) ON DELETE SET NULL
+        REFERENCES users(user_id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Indexes for performance
 CREATE INDEX idx_issues_status ON issues(status);
 CREATE INDEX idx_issues_priority ON issues(priority);
 CREATE INDEX idx_issues_created_by ON issues(created_by);
-CREATE INDEX idx_issues_assigned_to ON issues(assigned_to);
 CREATE INDEX idx_issues_created_at ON issues(created_at);

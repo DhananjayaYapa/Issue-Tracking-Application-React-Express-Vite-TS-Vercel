@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const IssueController = require("./issueController");
-const { authenticate, authorize } = require("../../middleware/auth");
+const {
+  authenticate,
+  authorize,
+  requireEnabled,
+} = require("../../middleware/auth");
 const { USER_ROLES } = require("../../shared/constants/roleConstants");
 const {
   validateRequest,
@@ -31,7 +35,7 @@ router.get("/export/csv", asyncHandler(IssueController.exportCSV));
 //Export issues to json
 router.get("/export/json", asyncHandler(IssueController.exportJSON));
 
- //Get issues created by the authenticated user
+//Get issues created by the authenticated user
 router.get(
   "/my-issues",
   authorize(USER_ROLES.USER),
@@ -60,6 +64,7 @@ router.get(
 router.post(
   "/",
   authorize(USER_ROLES.USER),
+  requireEnabled,
   upload.single("attachment"),
   createIssueValidation,
   validateRequest,
@@ -77,6 +82,7 @@ router.get(
 //update issue
 router.put(
   "/:id",
+  requireEnabled,
   upload.single("attachment"),
   updateIssueValidation,
   validateRequest,
@@ -95,7 +101,8 @@ router.patch(
 //delete issue
 router.delete(
   "/:id",
-  authorize(USER_ROLES.ADMIN),
+  authorize(USER_ROLES.ADMIN, USER_ROLES.USER),
+  requireEnabled,
   issueIdValidation,
   validateRequest,
   asyncHandler(IssueController.deleteIssue),

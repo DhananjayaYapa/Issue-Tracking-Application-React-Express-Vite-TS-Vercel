@@ -31,7 +31,7 @@ const DetailRow: React.FC<{ label: string; children: React.ReactNode }> = ({ lab
     <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120, fontWeight: 600 }}>
       {label}
     </Typography>
-    <Box sx={{ flex: 1 }}>{children}</Box>
+    <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
   </Box>
 )
 
@@ -56,13 +56,17 @@ const IssueDetailDialog: React.FC<IssueDetailDialogProps> = ({ open, onClose, is
       <Divider />
       <DialogContent sx={{ pt: 2 }}>
         <DetailRow label="Title">
-          <Typography variant="body2" fontWeight={500}>
+          <Typography
+            variant="body2"
+            fontWeight={500}
+            sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+          >
             {issue.title}
           </Typography>
         </DetailRow>
 
         <DetailRow label="Description">
-          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
             {issue.description || '—'}
           </Typography>
         </DetailRow>
@@ -77,10 +81,6 @@ const IssueDetailDialog: React.FC<IssueDetailDialogProps> = ({ open, onClose, is
 
         <DetailRow label="Created By">
           <Typography variant="body2">{issue.createdBy.name}</Typography>
-        </DetailRow>
-
-        <DetailRow label="Assigned To">
-          <Typography variant="body2">{issue.assignedTo?.name || '—'}</Typography>
         </DetailRow>
 
         <DetailRow label="Created At">

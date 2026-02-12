@@ -1,21 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import {
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Grid,
-  Typography,
-  Alert,
-  Divider,
-  Avatar,
-  Snackbar,
-} from '@mui/material'
-import { Person as PersonIcon, Save as SaveIcon, Lock as LockIcon } from '@mui/icons-material'
+import { Box, Grid2 as Grid, Alert, Snackbar } from '@mui/material'
 import { authActions } from '../../redux/actions'
 import type { RootState } from '../../redux/store'
-import { PageHeader } from '../../components/shared'
+import { ProfileInformation, PasswordChange } from '../../components/profile'
 import styles from './Profile.module.scss'
 
 const Profile: React.FC = () => {
@@ -81,155 +69,43 @@ const Profile: React.FC = () => {
     setPasswordSuccess(false)
   }
 
+  const formattedRole = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''
+
   return (
     <Box className={styles.profileContainer}>
-      <PageHeader title="Profile" subtitle="Manage your account settings" />
-
-      <Grid container spacing={3}>
-        <Grid>
-          <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <Avatar
-                sx={{
-                  bgcolor: 'primary.main',
-                  width: 56,
-                  height: 56,
-                  mr: 2,
-                }}
-              >
-                <PersonIcon sx={{ fontSize: 32 }} />
-              </Avatar>
-              <Box>
-                <Typography variant="h6" fontWeight={600}>
-                  Profile Information
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Update your personal details
-                </Typography>
-              </Box>
-            </Box>
-
-            <Divider sx={{ mb: 3 }} />
-
-            {error && !passwordSuccess && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
-            )}
-
-            <form onSubmit={handleUpdateProfile}>
-              <TextField
-                label="Email"
-                value={user?.email || ''}
-                fullWidth
-                disabled
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                label="Role"
-                value={user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}
-                fullWidth
-                disabled
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                label="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                fullWidth
-                sx={{ mb: 3 }}
-                placeholder="Enter your name"
-              />
-              <Button
-                type="submit"
-                variant="contained"
-                startIcon={<SaveIcon />}
-                disabled={isLoading || !name.trim()}
-                fullWidth
-              >
-                {isLoading ? 'Saving...' : 'Update Profile'}
-              </Button>
-            </form>
-          </Paper>
+      <Grid
+        container
+        spacing={3}
+        sx={{
+          maxWidth: 1400,
+          ml: '2px',
+          mr: 'auto',
+        }}
+      >
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ProfileInformation
+            email={user?.email || ''}
+            role={formattedRole}
+            name={name}
+            onNameChange={setName}
+            onSubmit={handleUpdateProfile}
+            isLoading={isLoading}
+            error={error && !passwordSuccess ? error : null}
+          />
         </Grid>
 
-        <Grid>
-          <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <Avatar
-                sx={{
-                  bgcolor: 'warning.main',
-                  width: 56,
-                  height: 56,
-                  mr: 2,
-                }}
-              >
-                <LockIcon sx={{ fontSize: 32 }} />
-              </Avatar>
-              <Box>
-                <Typography variant="h6" fontWeight={600}>
-                  Change Password
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Update your account password
-                </Typography>
-              </Box>
-            </Box>
-
-            <Divider sx={{ mb: 3 }} />
-
-            {passwordError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {passwordError}
-              </Alert>
-            )}
-
-            {error && passwordSuccess && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
-            )}
-
-            <form onSubmit={handleChangePassword}>
-              <TextField
-                label="Current Password"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                fullWidth
-                sx={{ mb: 2 }}
-                placeholder="Enter current password"
-              />
-              <TextField
-                label="New Password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                fullWidth
-                sx={{ mb: 2 }}
-                placeholder="Enter new password"
-              />
-              <TextField
-                label="Confirm New Password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                fullWidth
-                sx={{ mb: 3 }}
-                placeholder="Confirm new password"
-              />
-              <Button
-                type="submit"
-                variant="contained"
-                color="warning"
-                startIcon={<LockIcon />}
-                disabled={isLoading}
-                fullWidth
-              >
-                {isLoading ? 'Changing...' : 'Change Password'}
-              </Button>
-            </form>
-          </Paper>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <PasswordChange
+            currentPassword={currentPassword}
+            newPassword={newPassword}
+            confirmPassword={confirmPassword}
+            onCurrentPasswordChange={setCurrentPassword}
+            onNewPasswordChange={setNewPassword}
+            onConfirmPasswordChange={setConfirmPassword}
+            onSubmit={handleChangePassword}
+            isLoading={isLoading}
+            error={passwordError || (error && passwordSuccess ? error : null)}
+          />
         </Grid>
       </Grid>
 

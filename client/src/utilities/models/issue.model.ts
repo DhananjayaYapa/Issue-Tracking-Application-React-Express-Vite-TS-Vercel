@@ -12,11 +12,6 @@ export interface Issue {
     name: string
     email: string
   }
-  assignedTo: {
-    id: number
-    name: string
-    email: string
-  } | null
   createdAt: string
   updatedAt: string
   resolvedAt: string | null
@@ -28,7 +23,6 @@ export interface CreateIssuePayload {
   description: string
   priority: IssuePriority
   status?: IssueStatus
-  assignedTo?: number
   attachment?: File | null
 }
 

@@ -2,19 +2,19 @@ import React from 'react'
 import { Box, Typography, Button } from '@mui/material'
 
 interface PageHeaderProps {
-  title: string
   subtitle?: string
   actionLabel?: string
   actionIcon?: React.ReactNode
   onAction?: () => void
+  actionDisabled?: boolean
 }
 
 const PageHeader: React.FC<PageHeaderProps> = ({
-  title,
   subtitle,
   actionLabel,
   actionIcon,
   onAction,
+  actionDisabled,
 }) => {
   return (
     <Box
@@ -26,9 +26,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({
       }}
     >
       <Box>
-        <Typography variant="h4" fontWeight={600}>
-          {title}
-        </Typography>
         {subtitle && (
           <Typography variant="body2" color="text.secondary">
             {subtitle}
@@ -36,7 +33,12 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         )}
       </Box>
       {actionLabel && onAction && (
-        <Button variant="contained" startIcon={actionIcon} onClick={onAction}>
+        <Button
+          variant="contained"
+          startIcon={actionIcon}
+          onClick={onAction}
+          disabled={actionDisabled}
+        >
           {actionLabel}
         </Button>
       )}

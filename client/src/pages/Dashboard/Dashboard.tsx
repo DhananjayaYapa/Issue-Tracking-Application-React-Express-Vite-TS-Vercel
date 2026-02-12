@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Box, Grid, Card, CardContent, Typography } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
+import { Box, Grid, Card, CardContent, Typography, Divider, Button } from '@mui/material'
 import {
   BugReport as OpenIcon,
   Autorenew as InProgressIcon,
@@ -9,13 +10,20 @@ import {
 } from '@mui/icons-material'
 import { issueActions } from '../../redux/actions'
 import type { RootState } from '../../redux/store'
-import { StatCard, WelcomeMessage } from '../../components/dashboard'
+import {
+  StatCard,
+  WelcomeMessage,
+  IssuesBarChart,
+  IssuesPieChart,
+} from '../../components/dashboard'
 import { LoadingOverlay } from '../../components/shared'
+import { APP_ROUTES } from '../../utilities/constants'
 import styles from './Dashboard.module.scss'
 
 const Dashboard: React.FC = () => {
   const dispatch = useDispatch()
-  const { statusCounts, myStatusCounts, isLoading } = useSelector(
+  const navigate = useNavigate()
+  const { statusCounts, myStatusCounts, issues, isLoading } = useSelector(
     (state: RootState) => state.issues
   )
   const user = useSelector((state: RootState) => state.auth.user)
@@ -26,8 +34,10 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (isAdmin) {
       dispatch(issueActions.fetchStatusCountsRequest())
+      dispatch(issueActions.fetchIssuesRequest({}))
     } else {
       dispatch(issueActions.fetchMyStatusCountsRequest())
+      dispatch(issueActions.fetchMyIssuesRequest())
     }
   }, [dispatch, isAdmin])
 
@@ -60,7 +70,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <Box className={styles.dashboard}>
-      <WelcomeMessage userName={user?.name} />
+      <WelcomeMessage userName={user?.name} isAdmin={isAdmin} />
       <LoadingOverlay loading={isLoading} minHeight={200}>
         <Grid container spacing={3}>
           {stats.map((stat) => (
@@ -72,16 +82,38 @@ const Dashboard: React.FC = () => {
       </LoadingOverlay>
       <Box className={styles.totalSection}>
         <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Total Issues
-            </Typography>
-            <Typography variant="h3" fontWeight={600} color="primary">
-              {counts?.total || 0}
-            </Typography>
+          <CardContent
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+          >
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                Total Issues
+              </Typography>
+              <Typography variant="h3" fontWeight={600} color="primary">
+                {counts?.total || 0}
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => navigate(isAdmin ? APP_ROUTES.ISSUES : APP_ROUTES.MY_ISSUES)}
+            >
+              View Details
+            </Button>
           </CardContent>
         </Card>
       </Box>
+      <Divider />
+
+      {/* Charts Section */}
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid item xs={12} md={6}>
+          <IssuesBarChart issues={issues} />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <IssuesPieChart statusCounts={counts} />
+        </Grid>
+      </Grid>
     </Box>
   )
 }
