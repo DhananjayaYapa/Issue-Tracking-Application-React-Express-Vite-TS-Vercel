@@ -5,6 +5,9 @@ let sequelize = null;
 // Only create Sequelize instance if DB credentials are available
 if (process.env.DB_NAME && process.env.DB_USER && process.env.DB_HOST) {
   try {
+    // Optimized for serverless (Vercel)
+    const isServerless = !!process.env.VERCEL;
+
     sequelize = new Sequelize(
       process.env.DB_NAME,
       process.env.DB_USER,
@@ -15,17 +18,18 @@ if (process.env.DB_NAME && process.env.DB_USER && process.env.DB_HOST) {
         dialect: "mysql",
         logging: false,
         pool: {
-          max: 10,
+          max: isServerless ? 2 : 10, // Smaller pool for serverless
           min: 0,
-          acquire: 30000,
-          idle: 10000,
+          acquire: isServerless ? 3000 : 30000, // Faster timeout for serverless
+          idle: isServerless ? 0 : 10000, // Close idle connections immediately in serverless
+          evict: isServerless ? 1000 : 1000,
         },
         define: {
           timestamps: true,
           underscored: true,
         },
         dialectOptions: {
-          connectTimeout: 10000,
+          connectTimeout: isServerless ? 5000 : 10000, // 5s timeout for serverless
         },
       },
     );
